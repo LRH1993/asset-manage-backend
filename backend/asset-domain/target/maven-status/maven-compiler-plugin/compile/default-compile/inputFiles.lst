@@ -1,0 +1,13 @@
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/vo/ModuleAllocationVO.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/repository/PriceHistoryRepository.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/entity/RiskMetrics.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/vo/ModuleInfoVO.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/repository/TransactionRepository.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/entity/Transaction.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/vo/AssetOverviewVO.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/repository/PositionRepository.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/entity/Position.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/repository/RiskMetricsRepository.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/vo/ReturnCurveDataVO.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/entity/PriceHistory.java
+/Users/ruheng/workSpace/asset_manage/backend/asset-domain/src/main/java/com/asset/domain/vo/CoreMetricsVO.java
