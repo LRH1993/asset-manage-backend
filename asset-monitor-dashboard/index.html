@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ 资产监控平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 50%, #edf2f7 100%);
+            min-height: 100vh;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 25px;
+        }
+
+        /* 顶部栏 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 20px 28px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-info {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #48bb78;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(72, 187, 120, 0); }
+        }
+
+        /* 总资产卡片 */
+        .total-asset {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+
+        .total-label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+
+        .total-value {
+            font-size: 64px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .total-gain {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            font-size: 18px;
+        }
+
+        .gain-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gain-item.positive { color: #68d391; }
+        .gain-item.negative { color: #fc8181; }
+
+        /* 主网格布局 */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+            align-items: start;
+        }
+
+        /* 左侧面板 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 饼图 */
+        .pie-container {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .pie-wrapper {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 20px;
+        }
+
+        .pie-chart {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                #667eea 0deg 90deg,
+                #48bb78 90deg 180deg,
+                #f6ad55 180deg 270deg,
+                #4299e1 270deg 360deg
+            );
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .pie-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .pie-center-text {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .pie-center-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* 图例 */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* 风险指标 */
+        .risk-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .risk-metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .metric-value.warning {
+            color: #ecc94b;
+        }
+
+        .metric-value.danger {
+            color: #f56565;
+        }
+
+        /* 右侧主面板 */
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 绩效指标卡片 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .metric-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .metric-title {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .metric-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .metric-change {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .metric-change.positive { color: #48bb78; }
+        .metric-change.negative { color: #f56565; }
+
+        /* 模块详情表格 */
+        .modules-table {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 120px 1fr 120px 120px 120px 140px;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .table-header {
+            font-weight: 600;
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .table-header .table-row {
+            padding-bottom: 12px;
+        }
+
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .module-badge.growth {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .module-badge.dividend {
+            background: rgba(72, 187, 120, 0.1);
+            color: #48bb78;
+        }
+
+        .module-badge.fixed {
+            background: rgba(246, 173, 85, 0.1);
+            color: #f6ad55;
+        }
+
+        .module-badge.allweather {
+            background: rgba(66, 153, 225, 0.1);
+            color: #4299e1;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .deviation {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .deviation.positive {
+            background: rgba(245, 101, 101, 0.1);
+            color: #f56565;
+        }
+
+        .deviation.negative {
+            background: rgba(72, 187, 120, 0.1);
+            color: #48bb78;
+        }
+
+        .deviation.neutral {
+            background: rgba(113, 128, 150, 0.1);
+            color: #718096;
+        }
+
+        /* 底部调仓建议区域 */
+        .rebalance-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .rebalance-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        /* 净值曲线 */
+        .curve-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .curve-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .curve-periods {
+            display: flex;
+            gap: 8px;
+        }
+
+        .period-btn {
+            padding: 8px 18px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .period-btn:hover,
+        .period-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 320px;
+            background: linear-gradient(180deg, 
+                rgba(102, 126, 234, 0.03) 0%, 
+                rgba(255, 255, 255, 0) 100%);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .chart-grid {
+            position: absolute;
+            top: 0;
+            left: 60px;
+            right: 0;
+            bottom: 40px;
+        }
+
+        .grid-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e2e8f0;
+            opacity: 0.5;
+        }
+
+        .axis-y {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 40px;
+            width: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .axis-y-label {
+            font-size: 11px;
+            color: #a0aec0;
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        .axis-x {
+            position: absolute;
+            left: 60px;
+            right: 0;
+            bottom: 0;
+            height: 40px;
+            display: flex;
+            justify-content: space-between;
+            padding-left: 10px;
+            padding-right: 10px;
+            align-items: center;
+        }
+
+        .axis-x-label {
+            font-size: 11px;
+            color: #a0aec0;
+        }
+
+        /* 悬停提示框 */
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(45, 55, 72, 0.95);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            min-width: 160px;
+        }
+
+        .chart-tooltip.show {
+            opacity: 1;
+        }
+
+        .tooltip-date {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-bottom: 6px;
+        }
+
+        .tooltip-value {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .tooltip-change {
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .tooltip-change .positive {
+            color: #68d391;
+        }
+
+        .tooltip-change .negative {
+            color: #fc8181;
+        }
+
+        .tooltip-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tooltip-item .label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tooltip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-path {
+            fill: none;
+            stroke: url(#gradient);
+            stroke-width: 3;
+            filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.2));
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw-line 2s ease-out forwards;
+        }
+
+        @keyframes draw-line {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .chart-area {
+            fill: url(#area-gradient);
+            opacity: 0.15;
+        }
+
+        /* 图例 */
+        .chart-legend {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 18px;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .legend-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item-chart {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-line {
+            width: 30px;
+            border-radius: 2px;
+        }
+
+        .legend-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        /* 调仓建议项 */
+        .rebalance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .rebalance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .rebalance-item:last-child {
+            border-bottom: none;
+        }
+
+        .rebalance-info {
+            flex: 1;
+        }
+
+        .rebalance-module {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .rebalance-detail {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .rebalance-action {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .rebalance-action.sell {
+            background: rgba(245, 101, 101, 0.1);
+            color: #f56565;
+        }
+
+        .rebalance-action.buy {
+            background: rgba(72, 187, 120, 0.1);
+            color: #48bb78;
+        }
+
+        /* 地域分布 */
+        .geo-distribution {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .geo-item {
+            flex: 1;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .geo-name {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .geo-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        /* 警告横幅 */
+        .alert-banner {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 24px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            margin-top: 25px;
+        }
+
+        .alert-icon {
+            font-size: 24px;
+        }
+
+        .alert-text {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: #d69e2e;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+
+        .alert-message {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1400px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                flex-direction: row;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .sidebar {
+                flex-direction: column;
+            }
+
+            .total-value {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部栏 -->
+        <div class="header">
+            <div class="logo">⚡ ASSET.FOLIO</div>
+            <div class="header-info">
+                <span>上次更新: 2024-03-21 09:55</span>
+                <div class="status">
+                    <span class="status-dot"></span>
+                    <span>实时同步</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 总资产 -->
+        <div class="total-asset">
+            <div class="total-label">总资产</div>
+            <div class="total-value">¥1,234,567.89</div>
+            <div class="total-gain">
+                <div class="gain-item positive">
+                    <span>今日: +¥28,400</span>
+                </div>
+                <div class="gain-item positive">
+                    <span>累计: +¥234,567</span>
+                </div>
+                <div class="gain-item positive">
+                    <span>年化: +15.6%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主网格 -->
+        <div class="main-grid">
+            <!-- 左侧边栏 -->
+            <div class="sidebar">
+                <!-- 配置比例 -->
+                <div class="sidebar-card">
+                    <div class="card-title">
+                        <span>📊 资产配置</span>
+                    </div>
+                    <div class="pie-container">
+                        <div class="pie-wrapper">
+                            <div class="pie-chart"></div>
+                            <div class="pie-center">
+                                <div class="pie-center-text">四象限</div>
+                                <div class="pie-center-value">4模块</div>
+                            </div>
+                        </div>
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background: #667eea"></div>
+                                <span>成长</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background: #48bb78"></div>
+                                <span>红利</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background: #f6ad55"></div>
+                                <span>固收</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background: #4299e1"></div>
+                                <span>全天候</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 风险指标 -->
+                <div class="sidebar-card">
+                    <div class="card-title">
+                        <span>⚠️ 风险指标</span>
+                    </div>
+                    <div class="risk-metric">
+                        <span class="metric-label">最大回撤</span>
+                        <span class="metric-value warning">-12.3%</span>
+                    </div>
+                    <div class="risk-metric">
+                        <span class="metric-label">30日波动率</span>
+                        <span class="metric-value">8.5%</span>
+                    </div>
+                    <div class="risk-metric">
+                        <span class="metric-label">夏普比率</span>
+                        <span class="metric-value">1.42</span>
+                    </div>
+                    <div class="risk-metric">
+                        <span class="metric-label">集中度风险</span>
+                        <span class="metric-value">低</span>
+                    </div>
+                    <div class="risk-metric">
+                        <span class="metric-label">VaR (95%)</span>
+                        <span class="metric-value danger">-¥45,000</span>
+                    </div>
+                    
+                    <!-- 地域分布 -->
+                    <div class="card-title" style="margin-top: 25px;">
+                        <span>🌍 地域分布</span>
+                    </div>
+                    <div class="geo-distribution">
+                        <div class="geo-item">
+                            <div class="geo-name">美股</div>
+                            <div class="geo-value">35%</div>
+                        </div>
+                        <div class="geo-item">
+                            <div class="geo-name">港股</div>
+                            <div class="geo-value">28%</div>
+                        </div>
+                        <div class="geo-item">
+                            <div class="geo-name">A股</div>
+                            <div class="geo-value">37%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧主面板 -->
+            <div class="main-panel">
+                <!-- 绩效指标 (3个，去掉分红) -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">📈</div>
+                        <div class="metric-title">累计收益率</div>
+                        <div class="metric-number">+23.5%</div>
+                        <div class="metric-change positive">🟢 跑赢基准 8.2%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">🎯</div>
+                        <div class="metric-title">年化收益率</div>
+                        <div class="metric-number">+15.6%</div>
+                        <div class="metric-change positive">🟢 过去12个月</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">📊</div>
+                        <div class="metric-title">偏离度</div>
+                        <div class="metric-number">5.0%</div>
+                        <div class="metric-change warning">⚠️ 需要调仓</div>
+                    </div>
+                </div>
+
+                <!-- 模块详情表 -->
+                <div class="modules-table">
+                    <div class="table-header">
+                        <div class="table-row">
+                            <div>模块</div>
+                            <div>当前占比</div>
+                            <div>目标占比</div>
+                            <div>偏离度</div>
+                            <div>收益率</div>
+                            <div>市值</div>
+                        </div>
+                    </div>
+                    <div class="table-row">
+                        <div>
+                            <span class="module-badge growth">🟦 成长</span>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="progress-bar" style="width: 60px;">
+                                    <div class="progress-fill" style="width: 30%; background: #667eea;"></div>
+                                </div>
+                                <span class="progress-text">30%</span>
+                            </div>
+                        </div>
+                        <div style="color: #718096;">25%</div>
+                        <div>
+                            <span class="deviation positive">+5%</span>
+                        </div>
+                        <div style="color: #48bb78; font-weight: 600;">+12.5%</div>
+                        <div style="color: #2d3748; font-weight: 600;">¥370,370</div>
+                    </div>
+                    <div class="table-row">
+                        <div>
+                            <span class="module-badge dividend">🟩 红利</span>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="progress-bar" style="width: 60px;">
+                                    <div class="progress-fill" style="width: 25%; background: #48bb78;"></div>
+                                </div>
+                                <span class="progress-text">25%</span>
+                            </div>
+                        </div>
+                        <div style="color: #718096;">25%</div>
+                        <div>
+                            <span class="deviation neutral">0%</span>
+                        </div>
+                        <div style="color: #48bb78; font-weight: 600;">+8.2%</div>
+                        <div style="color: #2d3748; font-weight: 600;">¥308,642</div>
+                    </div>
+                    <div class="table-row">
+                        <div>
+                            <span class="module-badge fixed">🟧 固收</span>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="progress-bar" style="width: 60px;">
+                                    <div class="progress-fill" style="width: 25%; background: #f6ad55;"></div>
+                                </div>
+                                <span class="progress-text">25%</span>
+                            </div>
+                        </div>
+                        <div style="color: #718096;">25%</div>
+                        <div>
+                            <span class="deviation neutral">0%</span>
+                        </div>
+                        <div style="color: #48bb78; font-weight: 600;">+3.1%</div>
+                        <div style="color: #2d3748; font-weight: 600;">¥308,642</div>
+                    </div>
+                    <div class="table-row">
+                        <div>
+                            <span class="module-badge allweather">🔵 全天候</span>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="progress-bar" style="width: 60px;">
+                                    <div class="progress-fill" style="width: 20%; background: #4299e1;"></div>
+                                </div>
+                                <span class="progress-text">20%</span>
+                            </div>
+                        </div>
+                        <div style="color: #718096;">25%</div>
+                        <div>
+                            <span class="deviation negative">-5%</span>
+                        </div>
+                        <div style="color: #48bb78; font-weight: 600;">+5.4%</div>
+                        <div style="color: #2d3748; font-weight: 600;">¥246,914</div>
+                    </div>
+                </div>
+
+                <!-- 净值曲线 -->
+                <div class="curve-section">
+                    <div class="curve-header">
+                        <div class="card-title">
+                            <span>📈 资产净值曲线 vs 基准</span>
+                        </div>
+                        <div class="curve-periods">
+                            <button class="period-btn">7日</button>
+                            <button class="period-btn">30日</button>
+                            <button class="period-btn active">90日</button>
+                            <button class="period-btn">1年</button>
+                            <button class="period-btn">全部</button>
+                        </div>
+                    </div>
+                    <div class="chart-canvas">
+                        <!-- Y轴刻度 -->
+                        <div class="axis-y">
+                            <span class="axis-y-label">¥1.30M</span>
+                            <span class="axis-y-label">¥1.25M</span>
+                            <span class="axis-y-label">¥1.20M</span>
+                            <span class="axis-y-label">¥1.15M</span>
+                            <span class="axis-y-label">¥1.10M</span>
+                        </div>
+
+                        <!-- 横向网格线 -->
+                        <div class="chart-grid">
+                            <div class="grid-line" style="top: 10px;"></div>
+                            <div class="grid-line" style="top: 85px;"></div>
+                            <div class="grid-line" style="top: 160px;"></div>
+                            <div class="grid-line" style="top: 235px;"></div>
+                        </div>
+
+                        <!-- X轴刻度 -->
+                        <div class="axis-x">
+                            <span class="axis-x-label">2023-12</span>
+                            <span class="axis-x-label">2024-01</span>
+                            <span class="axis-x-label">2024-02</span>
+                            <span class="axis-x-label">2024-03</span>
+                            <span class="axis-x-label">2024-04</span>
+                        </div>
+
+                        <svg class="chart-line" viewBox="0 0 1200 320" preserveAspectRatio="none" style="position: absolute; top: 0; left: 60px; right: 0; height: 280px;">
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                </linearGradient>
+                                <linearGradient id="area-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.25" />
+                                    <stop offset="100%" style="stop-color:#667eea;stop-opacity:0" />
+                                </linearGradient>
+                                <linearGradient id="benchmark-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#a0aec0;stop-opacity:0.15" />
+                                    <stop offset="100%" style="stop-color:#a0aec0;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            
+                            <!-- 基准曲线 (沪深300) -->
+                            <path fill="url(#benchmark-gradient)" stroke="none" d="M0,270 Q150,230 300,210 T600,160 T900,130 T1200,100 L1200,320 L0,320 Z"></path>
+                            <path fill="none" stroke="#a0aec0" stroke-width="2" stroke-dasharray="5,5" d="M0,270 Q150,230 300,210 T600,160 T900,130 T1200,100"></path>
+                            
+                            <!-- 组合净值曲线 -->
+                            <path class="chart-area" d="M0,250 Q150,200 300,180 T600,120 T900,80 T1200,50 L1200,320 L0,320 Z"></path>
+                            <path class="chart-path" d="M0,250 Q150,200 300,180 T600,120 T900,80 T1200,50"></path>
+                            
+                            <!-- 数据点 -->
+                            <g id="data-points">
+                                <!-- 组合数据点 -->
+                                <circle class="data-point" cx="0" cy="250" r="5" fill="#667eea" stroke="white" stroke-width="2"
+                                    data-date="2023-12-01" data-value="¥1,100,000" data-change="+0.0%"/>
+                                <circle class="data-point" cx="300" cy="180" r="5" fill="#667eea" stroke="white" stroke-width="2"
+                                    data-date="2024-01-01" data-value="¥1,180,000" data-change="+7.3%"/>
+                                <circle class="data-point" cx="600" cy="120" r="5" fill="#667eea" stroke="white" stroke-width="2"
+                                    data-date="2024-02-01" data-value="¥1,250,000" data-change="+13.6%"/>
+                                <circle class="data-point" cx="900" cy="80" r="5" fill="#667eea" stroke="white" stroke-width="2"
+                                    data-date="2024-03-01" data-value="¥1,285,000" data-change="+16.8%"/>
+                                <circle class="data-point" cx="1200" cy="50" r="6" fill="#667eea" stroke="white" stroke-width="2"
+                                    data-date="2024-04-01" data-value="¥1,300,000" data-change="+18.2%"/>
+
+                                <!-- 基准数据点 -->
+                                <circle class="benchmark-point" cx="0" cy="270" r="4" fill="#a0aec0" stroke="white" stroke-width="1"
+                                    data-date="2023-12-01" data-value="¥1,050,000" data-change="+0.0%"/>
+                                <circle class="benchmark-point" cx="300" cy="210" r="4" fill="#a0aec0" stroke="white" stroke-width="1"
+                                    data-date="2024-01-01" data-value="¥1,120,000" data-change="+6.7%"/>
+                                <circle class="benchmark-point" cx="600" cy="160" r="4" fill="#a0aec0" stroke="white" stroke-width="1"
+                                    data-date="2024-02-01" data-value="¥1,175,000" data-change="+11.9%"/>
+                                <circle class="benchmark-point" cx="900" cy="130" r="4" fill="#a0aec0" stroke="white" stroke-width="1"
+                                    data-date="2024-03-01" data-value="¥1,200,000" data-change="+14.3%"/>
+                                <circle class="benchmark-point" cx="1200" cy="100" r="4" fill="#a0aec0" stroke="white" stroke-width="1"
+                                    data-date="2024-04-01" data-value="¥1,210,000" data-change="+15.2%"/>
+                            </g>
+                            
+                            <!-- 标注 -->
+                            <g id="annotations">
+                                <!-- 当前值标注 -->
+                                <text x="1180" y="35" fill="#667eea" font-size="14" font-weight="bold" text-anchor="end">组合: +23.5%</text>
+                                <text x="1180" y="85" fill="#a0aec0" font-size="12" text-anchor="end">基准: +15.3%</text>
+                                <text x="1180" y="105" fill="#48bb78" font-size="11" text-anchor="end">超额: +8.2%</text>
+                            </g>
+                        </svg>
+                        
+                        <!-- 图例 -->
+                        <div class="chart-legend">
+                            <div class="legend-row">
+                                <div class="legend-item-chart">
+                                    <div class="legend-line" style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); height: 3px;"></div>
+                                    <span class="legend-text">我的组合</span>
+                                </div>
+                                <div class="legend-item-chart">
+                                    <div class="legend-line" style="background: #a0aec0; height: 2px; border-style: dashed; border-width: 2px;"></div>
+                                    <span class="legend-text">沪深300基准</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 悬停提示框 -->
+                        <div class="chart-tooltip" id="tooltip">
+                            <div class="tooltip-date">2024-03-01</div>
+                            <div class="tooltip-value">¥1,285,000</div>
+                            <div class="tooltip-change">
+                                <div class="tooltip-item">
+                                    <span class="label">
+                                        <div class="tooltip-dot" style="background: #667eea;"></div>
+                                        组合
+                                    </span>
+                                    <span class="positive">+16.8%</span>
+                                </div>
+                                <div class="tooltip-item">
+                                    <span class="label">
+                                        <div class="tooltip-dot" style="background: #a0aec0;"></div>
+                                        基准
+                                    </span>
+                                    <span class="positive">+14.3%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部调仓建议 -->
+        <div class="rebalance-section">
+            <div class="card-title">
+                <span>⚖️ 动态平衡建议</span>
+            </div>
+            <div class="rebalance-items">
+                <div class="rebalance-item">
+                    <div class="rebalance-info">
+                        <div class="rebalance-module">🟦 成长模块</div>
+                        <div class="rebalance-detail">超配 5%，建议卖出部分成长股</div>
+                    </div>
+                    <span class="rebalance-action sell">卖出 ¥61,728</span>
+                </div>
+                <div class="rebalance-item">
+                    <div class="rebalance-info">
+                        <div class="rebalance-module">🔵 全天候模块</div>
+                        <div class="rebalance-detail">低配 5%，建议增持全天候资产</div>
+                    </div>
+                    <span class="rebalance-action buy">买入 ¥61,728</span>
+                </div>
+                <div class="rebalance-item">
+                    <div class="rebalance-info">
+                        <div class="rebalance-module">🟩 红利模块</div>
+                        <div class="rebalance-detail">配置正常，无需调整</div>
+                    </div>
+                    <span class="rebalance-action" style="background: rgba(113, 128, 150, 0.1); color: #718096;">保持</span>
+                </div>
+                <div class="rebalance-item">
+                    <div class="rebalance-info">
+                        <div class="rebalance-module">🟧 固收模块</div>
+                        <div class="rebalance-detail">配置正常，无需调整</div>
+                    </div>
+                    <span class="rebalance-action" style="background: rgba(113, 128, 150, 0.1); color: #718096;">保持</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 周期切换
+        function initPeriodButtons() {
+            const buttons = document.querySelectorAll('.period-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+        }
+
+        // 悬停提示
+        function initTooltips() {
+            const tooltip = document.getElementById('tooltip');
+            const canvas = document.querySelector('.chart-canvas');
+            const portfolioPoints = document.querySelectorAll('.data-point');
+            const benchmarkPoints = document.querySelectorAll('.benchmark-point');
+
+            // 基准数据映射
+            const benchmarkData = {};
+            benchmarkPoints.forEach(point => {
+                const date = point.getAttribute('data-date');
+                benchmarkData[date] = {
+                    value: point.getAttribute('data-value'),
+                    change: point.getAttribute('data-change')
+                };
+            });
+
+            // 组合数据点悬停
+            portfolioPoints.forEach(point => {
+                point.addEventListener('mouseenter', (e) => {
+                    const date = point.getAttribute('data-date');
+                    const value = point.getAttribute('data-value');
+                    const change = point.getAttribute('data-change');
+                    const benchmark = benchmarkData[date];
+
+                    // 更新提示框内容
+                    tooltip.querySelector('.tooltip-date').textContent = date;
+                    tooltip.querySelector('.tooltip-value').textContent = value;
+
+                    const changeContainer = tooltip.querySelector('.tooltip-change');
+                    changeContainer.innerHTML = `
+                        <div class="tooltip-item">
+                            <span class="label">
+                                <div class="tooltip-dot" style="background: #667eea;"></div>
+                                组合
+                            </span>
+                            <span class="${parseFloat(change) >= 0 ? 'positive' : 'negative'}">${change}</span>
+                        </div>
+                        ${benchmark ? `
+                        <div class="tooltip-item">
+                            <span class="label">
+                                <div class="tooltip-dot" style="background: #a0aec0;"></div>
+                                基准
+                            </span>
+                            <span class="${parseFloat(benchmark.change) >= 0 ? 'positive' : 'negative'}">${benchmark.change}</span>
+                        </div>
+                        ` : ''}
+                    `;
+
+                    // 显示提示框
+                    tooltip.classList.add('show');
+
+                    // 计算位置
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    // 调整位置避免超出边界
+                    let tooltipLeft = x + 15;
+                    let tooltipTop = y - 60;
+
+                    if (tooltipLeft + 180 > rect.width) {
+                        tooltipLeft = x - 195;
+                    }
+                    if (tooltipTop < 10) {
+                        tooltipTop = y + 20;
+                    }
+
+                    tooltip.style.left = tooltipLeft + 'px';
+                    tooltip.style.top = tooltipTop + 'px';
+                });
+
+                point.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('show');
+                });
+            });
+
+            // 基准数据点悬停
+            benchmarkPoints.forEach(point => {
+                point.addEventListener('mouseenter', (e) => {
+                    const date = point.getAttribute('data-date');
+                    const value = point.getAttribute('data-value');
+                    const change = point.getAttribute('data-change');
+
+                    // 查找对应的组合数据
+                    const portfolioPoint = Array.from(portfolioPoints).find(p => p.getAttribute('data-date') === date);
+                    const portfolioValue = portfolioPoint ? portfolioPoint.getAttribute('data-value') : '';
+                    const portfolioChange = portfolioPoint ? portfolioPoint.getAttribute('data-change') : '';
+
+                    // 更新提示框内容
+                    tooltip.querySelector('.tooltip-date').textContent = date;
+                    tooltip.querySelector('.tooltip-value').textContent = value;
+
+                    const changeContainer = tooltip.querySelector('.tooltip-change');
+                    changeContainer.innerHTML = `
+                        <div class="tooltip-item">
+                            <span class="label">
+                                <div class="tooltip-dot" style="background: #a0aec0;"></div>
+                                基准
+                            </span>
+                            <span class="${parseFloat(change) >= 0 ? 'positive' : 'negative'}">${change}</span>
+                        </div>
+                        ${portfolioPoint ? `
+                        <div class="tooltip-item">
+                            <span class="label">
+                                <div class="tooltip-dot" style="background: #667eea;"></div>
+                                组合
+                            </span>
+                            <span class="${parseFloat(portfolioChange) >= 0 ? 'positive' : 'negative'}">${portfolioChange}</span>
+                        </div>
+                        ` : ''}
+                    `;
+
+                    // 显示提示框
+                    tooltip.classList.add('show');
+
+                    // 计算位置
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    let tooltipLeft = x + 15;
+                    let tooltipTop = y - 60;
+
+                    if (tooltipLeft + 180 > rect.width) {
+                        tooltipLeft = x - 195;
+                    }
+                    if (tooltipTop < 10) {
+                        tooltipTop = y + 20;
+                    }
+
+                    tooltip.style.left = tooltipLeft + 'px';
+                    tooltip.style.top = tooltipTop + 'px';
+                });
+
+                point.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('show');
+                });
+            });
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initPeriodButtons();
+            initTooltips();
+        });
+    </script>
+</body>
+</html>
