@@ -131,6 +131,7 @@ const AssetCurveChart: React.FC = () => {
     },
     xAxis: {
       type: 'category',
+      data: data.map((item) => item.date),
       boundaryGap: false,
       axisLine: {
         show: false,
@@ -143,6 +144,7 @@ const AssetCurveChart: React.FC = () => {
         show: true,
         color: '#a0aec0',
         fontSize: 11,
+        rotate: 30,
       },
     },
     yAxis: {
@@ -164,7 +166,7 @@ const AssetCurveChart: React.FC = () => {
       },
       axisLabel: {
         show: true,
-        formatter: (value: number) => `¥${(value * 10000).toFixed(0)}M`,
+        formatter: (value: number) => `${value.toFixed(2)}M`,
         color: '#a0aec0',
         fontSize: 11,
       },
