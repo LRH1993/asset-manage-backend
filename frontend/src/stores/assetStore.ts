@@ -28,7 +28,7 @@ interface AssetState {
   fetchAll: () => Promise<void>;
 }
 
-export const useAssetStore = create<AssetState>((set, get) => ({
+export const useAssetStore = create<AssetState>((set) => ({
   // 初始状态
   overview: null,
   metrics: null,
@@ -40,45 +40,41 @@ export const useAssetStore = create<AssetState>((set, get) => ({
 
   // 获取资产总览
   fetchOverview: async () => {
-    set({ loading: true, error: null });
     try {
       const data = await getAssetOverview();
-      set({ overview: data, loading: false });
+      set({ overview: data });
     } catch (error: any) {
-      set({ error: error.message, loading: false });
+      set({ error: error.message });
     }
   },
 
   // 获取核心指标
   fetchMetrics: async () => {
-    set({ loading: true, error: null });
     try {
       const data = await getCoreMetrics();
-      set({ metrics: data, loading: false });
+      set({ metrics: data });
     } catch (error: any) {
-      set({ error: error.message, loading: false });
+      set({ error: error.message });
     }
   },
 
   // 获取资产配置
   fetchAllocation: async () => {
-    set({ loading: true, error: null });
     try {
       const data = await getAssetAllocation();
-      set({ allocation: data, loading: false });
+      set({ allocation: data });
     } catch (error: any) {
-      set({ error: error.message, loading: false });
+      set({ error: error.message });
     }
   },
 
   // 获取收益曲线
   fetchReturnCurve: async (period = 'all') => {
-    set({ loading: true, error: null });
     try {
       const data = await getReturnCurve(period);
-      set({ returnCurve: data, loading: false });
+      set({ returnCurve: data });
     } catch (error: any) {
-      set({ error: error.message, loading: false });
+      set({ error: error.message });
     }
   },
 
@@ -94,12 +90,25 @@ export const useAssetStore = create<AssetState>((set, get) => ({
 
   // 获取所有数据
   fetchAll: async () => {
-    await Promise.all([
-      get().fetchOverview(),
-      get().fetchMetrics(),
-      get().fetchAllocation(),
-      get().fetchReturnCurve(),
-      get().fetchRebalanceSuggestions(),
-    ]);
+    set({ loading: true, error: null });
+    try {
+      const [overview, metrics, allocation, returnCurve, rebalanceSuggestion] = await Promise.all([
+        getAssetOverview(),
+        getCoreMetrics(),
+        getAssetAllocation(),
+        getReturnCurve('all'),
+        getRebalanceSuggestions(),
+      ]);
+      set({
+        overview,
+        metrics,
+        allocation,
+        returnCurve,
+        rebalanceSuggestion,
+        loading: false,
+      });
+    } catch (error: any) {
+      set({ error: error.message, loading: false });
+    }
   },
 }));

@@ -3,7 +3,7 @@
  * 遵循 ui/CLAUDE.md 设计规范
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, Button, Space } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
@@ -19,12 +19,9 @@ interface CurveData {
 
 const AssetCurveChart: React.FC = () => {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('90d');
-  const { returnCurve, fetchReturnCurve } = useAssetStore();
+  const { returnCurve } = useAssetStore();
 
-  // 当周期变化时重新获取数据
-  useEffect(() => {
-    fetchReturnCurve(period);
-  }, [period, fetchReturnCurve]);
+  // 数据由 Dashboard 页面统一加载，这里不再单独请求
 
   // 从store获取真实数据
   const data: CurveData[] = useMemo(() => {
