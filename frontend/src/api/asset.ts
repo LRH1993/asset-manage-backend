@@ -38,11 +38,13 @@ export interface ModuleAllocation {
 
 export interface ModuleInfo {
   name: string;
+  moduleCode?: string;
   targetWeight: number;
   currentValue: number;
   currentWeight: number;
   deviation: number;
-  return: number;
+  return?: number;
+  returnRate?: number;
 }
 
 /**
@@ -53,6 +55,26 @@ export interface ReturnCurveData {
   value: number;
   returnRate: number;
   benchmark?: number;
+}
+
+/**
+ * 调仓建议
+ */
+export interface RebalanceSuggestion {
+  needRebalance: boolean;
+  totalDeviation: number;
+  suggestions: SuggestionItem[];
+}
+
+export interface SuggestionItem {
+  moduleCode: string;
+  moduleName: string;
+  currentWeight: number;
+  targetWeight: number;
+  deviation: number;
+  action: 'buy' | 'sell';
+  amount: number;
+  description: string;
 }
 
 /**
@@ -81,4 +103,11 @@ export const getAssetAllocation = (): Promise<ModuleAllocation> => {
  */
 export const getReturnCurve = (period: '7d' | '30d' | '90d' | '1y' | 'all' = 'all'): Promise<ReturnCurveData[]> => {
   return api.get('/assets/return-curve', { params: { period } });
+};
+
+/**
+ * 获取调仓建议
+ */
+export const getRebalanceSuggestions = (): Promise<RebalanceSuggestion> => {
+  return api.get('/assets/rebalance-suggestions');
 };

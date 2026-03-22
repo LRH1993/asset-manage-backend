@@ -3,6 +3,7 @@ package com.asset.service;
 import com.asset.domain.vo.AssetOverviewVO;
 import com.asset.domain.vo.CoreMetricsVO;
 import com.asset.domain.vo.ModuleAllocationVO;
+import com.asset.domain.vo.RebalanceSuggestionVO;
 
 import java.util.List;
 
@@ -31,4 +32,9 @@ public interface AssetService {
      * @param period 周期类型：7d/30d/90d/1y/all
      */
     List<Object> getReturnCurve(String period);
+
+    /**
+     * 获取调仓建议
+     */
+    RebalanceSuggestionVO getRebalanceSuggestions();
 }

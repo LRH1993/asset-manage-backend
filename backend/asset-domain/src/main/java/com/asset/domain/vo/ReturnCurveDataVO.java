@@ -3,9 +3,11 @@ package com.asset.domain.vo;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 收益曲线数据VO
+ * 遵循 backend/CLAUDE.md 规范
  */
 @Data
 public class ReturnCurveDataVO implements Serializable {
@@ -20,15 +22,15 @@ public class ReturnCurveDataVO implements Serializable {
     /**
      * 资产净值
      */
-    private Double value;
+    private BigDecimal value;
 
     /**
-     * 收益率
+     * 收益率（百分比数值）
      */
-    private Double returnRate;
+    private BigDecimal returnRate;
 
     /**
      * 基准对比
      */
-    private Double benchmark;
+    private BigDecimal benchmark;
 }

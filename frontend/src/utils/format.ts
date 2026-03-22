@@ -1,12 +1,15 @@
 /**
  * 格式化工具函数
+ * 遵循 ui/CLAUDE.md 设计规范
  */
 
 import dayjs from 'dayjs';
 import Decimal from 'decimal.js';
+import { PROFIT_COLORS } from '@/constants/colors';
 
 /**
  * 格式化货币
+ * @description 大额数字自动转换单位（万/亿）
  */
 export const formatCurrency = (
   value: number | string,
@@ -18,7 +21,34 @@ export const formatCurrency = (
 };
 
 /**
+ * 格式化金额（智能单位转换）
+ * @description 大于1万显示"万"，大于1亿显示"亿"
+ */
+export const formatMoney = (value: number | string): string => {
+  const num = new Decimal(value);
+  const abs = num.abs();
+
+  if (abs.gte(100000000)) {
+    return `${num.div(100000000).toFixed(2)}亿`;
+  }
+  if (abs.gte(10000)) {
+    return `${num.div(10000).toFixed(2)}万`;
+  }
+  return num.toFixed(2);
+};
+
+/**
+ * 格式化金额（千分位）
+ * @description 用于表格精确显示
+ */
+export const formatMoneyWithComma = (value: number | string): string => {
+  const num = new Decimal(value);
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
+/**
  * 格式化百分比
+ * @description 自动添加正负号
  */
 export const formatPercent = (
   value: number | string,
@@ -43,6 +73,14 @@ export const formatNumber = (
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
+};
+
+/**
+ * 格式化股数/份额（千分位）
+ */
+export const formatShares = (value: number | string, decimal = 0): string => {
+  const num = new Decimal(value);
+  return num.toFixed(decimal).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
 /**
@@ -107,42 +145,41 @@ export const formatStockCode = (code: string, market: string): string => {
 };
 
 /**
+ * 获取盈亏颜色（A股习惯：红涨绿跌）
+ * @param value 数值
+ * @returns 颜色值
+ */
+export const getProfitColor = (value: number): string => {
+  if (value > 0) return PROFIT_COLORS.up;      // #CF1322 红色
+  if (value < 0) return PROFIT_COLORS.down;    // #3F8600 绿色
+  return PROFIT_COLORS.neutral;                 // #8C8C8C 灰色
+};
+
+/**
  * 格式化盈亏（带颜色）
+ * @description A股习惯：红涨绿跌
  */
 export const formatProfitLoss = (
   value: number,
   decimals: number = 2
 ): { text: string; color: string } => {
-  const isPositive = value > 0;
-  const isNegative = value < 0;
-
-  let color = 'text-gray-500';
-  if (isPositive) color = 'text-green-500';
-  if (isNegative) color = 'text-red-500';
-
   return {
     text: formatNumber(value, decimals),
-    color,
+    color: getProfitColor(value),
   };
 };
 
 /**
  * 格式化盈亏率（带颜色）
+ * @description A股习惯：红涨绿跌
  */
 export const formatProfitRate = (
   value: number,
   decimals: number = 2
 ): { text: string; color: string } => {
-  const isPositive = value > 0;
-  const isNegative = value < 0;
-
-  let color = 'text-gray-500';
-  if (isPositive) color = 'text-green-500';
-  if (isNegative) color = 'text-red-500';
-
   return {
     text: formatPercent(value, decimals),
-    color,
+    color: getProfitColor(value),
   };
 };
 

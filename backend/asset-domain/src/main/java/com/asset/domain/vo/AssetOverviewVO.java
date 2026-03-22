@@ -3,9 +3,11 @@ package com.asset.domain.vo;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 资产总览VO
+ * 遵循 backend/CLAUDE.md 规范
  */
 @Data
 public class AssetOverviewVO implements Serializable {
@@ -15,35 +17,35 @@ public class AssetOverviewVO implements Serializable {
     /**
      * 总资产
      */
-    private Double totalValue;
+    private BigDecimal totalValue;
 
     /**
      * 今日盈亏
      */
-    private Double todayProfit;
+    private BigDecimal todayProfit;
 
     /**
-     * 今日盈亏率
+     * 今日盈亏率（百分比数值，如 2.35 表示 2.35%）
      */
-    private Double todayProfitRate;
+    private BigDecimal todayProfitRate;
 
     /**
      * 累计盈亏
      */
-    private Double totalProfit;
+    private BigDecimal totalProfit;
 
     /**
-     * 累计盈亏率
+     * 累计盈亏率（百分比数值）
      */
-    private Double totalProfitRate;
+    private BigDecimal totalProfitRate;
 
     /**
-     * 年化收益率
+     * 年化收益率（百分比数值）
      */
-    private Double annualReturn;
+    private BigDecimal annualReturn;
 
     /**
-     * 基准对比
+     * 基准对比（百分比数值）
      */
-    private Double benchmarkComparison;
+    private BigDecimal benchmarkComparison;
 }

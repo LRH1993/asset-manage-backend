@@ -2,6 +2,7 @@ package com.asset.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -37,11 +38,13 @@ public class RiskMetrics {
     /**
      * 30日波动率
      */
+    @TableField("volatility_30d")
     private BigDecimal volatility30d;
 
     /**
      * 90日波动率
      */
+    @TableField("volatility_90d")
     private BigDecimal volatility90d;
 
     /**
@@ -62,11 +65,13 @@ public class RiskMetrics {
     /**
      * VaR(95%)
      */
+    @TableField("var_95")
     private BigDecimal var95;
 
     /**
      * VaR(99%)
      */
+    @TableField("var_99")
     private BigDecimal var99;
 
     /**

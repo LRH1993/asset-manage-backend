@@ -3,8 +3,8 @@
  */
 
 import { create } from 'zustand';
-import { getAssetOverview, getCoreMetrics, getAssetAllocation, getReturnCurve } from '@/api/asset';
-import type { AssetOverview, CoreMetrics, ModuleAllocation, ReturnCurveData } from '@/api/asset';
+import { getAssetOverview, getCoreMetrics, getAssetAllocation, getReturnCurve, getRebalanceSuggestions } from '@/api/asset';
+import type { AssetOverview, CoreMetrics, ModuleAllocation, ReturnCurveData, RebalanceSuggestion } from '@/api/asset';
 import type { PeriodType } from '@/types/common';
 
 interface AssetState {
@@ -13,6 +13,7 @@ interface AssetState {
   metrics: CoreMetrics | null;
   allocation: ModuleAllocation | null;
   returnCurve: ReturnCurveData[] | null;
+  rebalanceSuggestion: RebalanceSuggestion | null;
 
   // 状态
   loading: boolean;
@@ -23,6 +24,7 @@ interface AssetState {
   fetchMetrics: () => Promise<void>;
   fetchAllocation: () => Promise<void>;
   fetchReturnCurve: (period?: PeriodType) => Promise<void>;
+  fetchRebalanceSuggestions: () => Promise<void>;
   fetchAll: () => Promise<void>;
 }
 
@@ -32,6 +34,7 @@ export const useAssetStore = create<AssetState>((set, get) => ({
   metrics: null,
   allocation: null,
   returnCurve: null,
+  rebalanceSuggestion: null,
   loading: false,
   error: null,
 
@@ -79,6 +82,16 @@ export const useAssetStore = create<AssetState>((set, get) => ({
     }
   },
 
+  // 获取调仓建议
+  fetchRebalanceSuggestions: async () => {
+    try {
+      const data = await getRebalanceSuggestions();
+      set({ rebalanceSuggestion: data });
+    } catch (error: any) {
+      set({ error: error.message });
+    }
+  },
+
   // 获取所有数据
   fetchAll: async () => {
     await Promise.all([
@@ -86,6 +99,7 @@ export const useAssetStore = create<AssetState>((set, get) => ({
       get().fetchMetrics(),
       get().fetchAllocation(),
       get().fetchReturnCurve(),
+      get().fetchRebalanceSuggestions(),
     ]);
   },
 }));

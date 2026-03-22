@@ -27,6 +27,12 @@ api.interceptors.request.use(
 // 响应拦截器
 api.interceptors.response.use(
   (response: any) => {
+    // 后端返回格式: { code, message, data }
+    // 提取 data 字段返回给调用方
+    const { data } = response;
+    if (data && typeof data === 'object' && 'data' in data) {
+      return data.data;
+    }
     return response.data;
   },
   (error: any) => {

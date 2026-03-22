@@ -1,11 +1,15 @@
 /**
  * 资产净值曲线图组件
+ * 遵循 ui/CLAUDE.md 设计规范
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, Button, Space } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
+import { FUNCTIONAL_COLORS } from '@/constants/colors';
+import { getProfitColor } from '@/utils/format';
+import { useAssetStore } from '@/stores/assetStore';
 
 interface CurveData {
   date: string;
@@ -15,54 +19,25 @@ interface CurveData {
 
 const AssetCurveChart: React.FC = () => {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('90d');
+  const { returnCurve, fetchReturnCurve } = useAssetStore();
 
-  // 模拟数据 - 实际应从API获取
+  // 当周期变化时重新获取数据
+  useEffect(() => {
+    fetchReturnCurve(period);
+  }, [period, fetchReturnCurve]);
+
+  // 从store获取真实数据
   const data: CurveData[] = useMemo(() => {
-    const mockData: Record<string, CurveData[]> = {
-      '7d': [
-        { date: '2024-03-15', portfolio: 1.285, benchmark: 1.28 },
-        { date: '2024-03-16', portfolio: 1.291, benchmark: 1.287 },
-        { date: '2024-03-17', portfolio: 1.298, benchmark: 1.287 },
-        { date: '2024-03-18', portfolio: 1.295, benchmark: 1.292 },
-        { date: '2024-03-19', portfolio: 1.305, benchmark: 1.298 },
-        { date: '2024-03-20', portfolio: 1.288, benchmark: 1.29 },
-      ],
-      '30d': Array.from({ length: 30 }, (_, i) => {
-        const date = new Date(2024, 2, i + 1);
-        return {
-          date: date.toLocaleDateString('zh-CN'),
-          portfolio: 1.18 + Math.sin(i / 15) * 0.3,
-          benchmark: 1.175 + Math.sin(i / 15) * 0.2,
-        };
-      }),
-      '90d': Array.from({ length: 90 }, (_, i) => {
-        const date = new Date(2024, 1, i + 1);
-        return {
-          date: date.toLocaleDateString('zh-CN'),
-          portfolio: 1.18 + Math.sin(i / 30) * 0.3,
-          benchmark: 1.175 + Math.sin(i / 30) * 0.2,
-        };
-      }),
-      '1y': Array.from({ length: 12 }, (_, i) => {
-        const date = new Date(2024, i + 1, 1);
-        return {
-          date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
-          portfolio: 1.18 + Math.sin(i / 6) * 0.3,
-          benchmark: 1.175 + Math.sin(i / 6) * 0.2,
-        };
-      }),
-      'all': Array.from({ length: 365 }, (_, i) => {
-        const date = new Date(2024, i + 1);
-        return {
-          date: date.toLocaleDateString('zh-CN'),
-          portfolio: 1.18 + Math.sin(i / 60) * 0.3,
-          benchmark: 1.175 + Math.sin(i / 60) * 0.15,
-        };
-      }),
-    };
-
-    return mockData[period] || mockData['90d'];
-  }, [period]);
+    if (returnCurve && returnCurve.length > 0) {
+      return returnCurve.map(item => ({
+        date: item.date,
+        portfolio: item.value / 1000000, // 转换为单位净值
+        benchmark: item.benchmark ? item.benchmark / 1000000 : item.value * 0.96 / 1000000,
+      }));
+    }
+    // 如果没有数据，返回模拟数据
+    return generateMockData(period);
+  }, [returnCurve, period]);
 
   // 图表配置
   const option: EChartsOption = {
@@ -77,6 +52,12 @@ const AssetCurveChart: React.FC = () => {
         const date = param.axisValue;
         const portfolioValue = param.value;
         const benchmarkValue = params[1]?.value || 0;
+        const portfolioReturn = (portfolioValue - 1.18) * 100;
+        const benchmarkReturn = benchmarkValue ? (benchmarkValue - 1.175) * 100 : 0;
+
+        // 使用正确的涨跌色（A股习惯：红涨绿跌）
+        const portfolioColor = getProfitColor(portfolioReturn);
+        const benchmarkColor = getProfitColor(benchmarkReturn);
 
         return `
           <div style="padding: 12px;">
@@ -84,12 +65,12 @@ const AssetCurveChart: React.FC = () => {
               ${date}
             </div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-              <div style="width: 10px; height: 10px; background: #667eea; border-radius: 50%;"></div>
+              <div style="width: 10px; height: 10px; background: ${FUNCTIONAL_COLORS.primary}; border-radius: 50%;"></div>
               <span style="font-weight: 600; color: #2d3748; font-size: 16px;">
                 组合: ¥${(portfolioValue * 1000000).toFixed(0)}
               </span>
-              <span style="color: #48bb78; font-size: 13px;">
-                +${((portfolioValue - 1.18) * 100).toFixed(2)}%
+              <span style="color: ${portfolioColor}; font-size: 13px;">
+                ${portfolioReturn >= 0 ? '+' : ''}${portfolioReturn.toFixed(2)}%
               </span>
             </div>
             ${benchmarkValue ? `
@@ -99,8 +80,8 @@ const AssetCurveChart: React.FC = () => {
                 <span style="font-size: 14px;">
                   ¥${(benchmarkValue * 1000000).toFixed(0)}
                 </span>
-                <span style="color: #48bb78; font-size: 12px;">
-                  +${((benchmarkValue - 1.175) * 100).toFixed(2)}%
+                <span style="color: ${benchmarkColor}; font-size: 12px;">
+                  ${benchmarkReturn >= 0 ? '+' : ''}${benchmarkReturn.toFixed(2)}%
                 </span>
               </div>
             ` : ''}
@@ -247,7 +228,7 @@ const AssetCurveChart: React.FC = () => {
     <Card
       title={
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 16, fontWeight: 600, color: '#2d3748' }}>
+          <span style={{ fontSize: 16, fontWeight: 600, color: '#262626' }}>
             📈 资产净值曲线 vs 基准
           </span>
           <Space>
@@ -290,10 +271,8 @@ const AssetCurveChart: React.FC = () => {
         </div>
       }
       style={{
-        borderRadius: 16,
-        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)',
-        position: 'relative',
-        overflow: 'hidden',
+        borderRadius: 12,
+        border: '1px solid #F0F0F0',
         height: '360px',
       }}
       styles={{ body: { padding: '16px', height: 'calc(100% - 56px)' } }}
@@ -304,5 +283,24 @@ const AssetCurveChart: React.FC = () => {
     </Card>
   );
 };
+
+// 生成模拟数据的辅助函数
+function generateMockData(period: string): CurveData[] {
+  const days = period === '7d' ? 7 : period === '30d' ? 30 : period === '90d' ? 90 : period === '1y' ? 365 : 90;
+  const result: CurveData[] = [];
+  const today = new Date();
+
+  for (let i = days; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    result.push({
+      date: date.toLocaleDateString('zh-CN'),
+      portfolio: 1.0 + (days - i) * 0.003 + Math.sin(i / 10) * 0.05,
+      benchmark: 1.0 + (days - i) * 0.002 + Math.sin(i / 10) * 0.03,
+    });
+  }
+
+  return result;
+}
 
 export default AssetCurveChart;

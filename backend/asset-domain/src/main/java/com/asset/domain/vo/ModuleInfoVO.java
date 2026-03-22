@@ -3,9 +3,11 @@ package com.asset.domain.vo;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 模块信息VO
+ * 遵循 backend/CLAUDE.md 规范
  */
 @Data
 public class ModuleInfoVO implements Serializable {
@@ -18,27 +20,32 @@ public class ModuleInfoVO implements Serializable {
     private String name;
 
     /**
-     * 目标权重
+     * 模块代码（dividend, fixed, growth, allweather）
      */
-    private Double targetWeight;
+    private String moduleCode;
+
+    /**
+     * 目标权重（百分比数值，如 25 表示 25%）
+     */
+    private BigDecimal targetWeight;
 
     /**
      * 当前市值
      */
-    private Double currentValue;
+    private BigDecimal currentValue;
 
     /**
-     * 当前权重
+     * 当前权重（百分比数值）
      */
-    private Double currentWeight;
+    private BigDecimal currentWeight;
 
     /**
-     * 偏离度
+     * 偏离度（百分比数值）
      */
-    private Double deviation;
+    private BigDecimal deviation;
 
     /**
-     * 模块收益
+     * 模块收益率（百分比数值）
      */
-    private Double returnRate;
+    private BigDecimal returnRate;
 }

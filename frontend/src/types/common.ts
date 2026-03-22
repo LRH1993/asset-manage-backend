@@ -61,7 +61,10 @@ export interface ModuleConfig {
   nameEn: string;
   targetWeight: number;
   color: string;
+  lightColor?: string;
   icon: string;
+  description?: string;
+  targetReturn?: number;
 }
 
 /**

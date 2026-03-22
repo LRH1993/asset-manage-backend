@@ -45,4 +45,10 @@ public class AssetController {
             @RequestParam(defaultValue = "all") String period) {
         return Result.success(assetService.getReturnCurve(period));
     }
+
+    @Operation(summary = "获取调仓建议")
+    @GetMapping("/rebalance-suggestions")
+    public Result<RebalanceSuggestionVO> getRebalanceSuggestions() {
+        return Result.success(assetService.getRebalanceSuggestions());
+    }
 }

@@ -7,12 +7,64 @@ import { Card } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
 import { MODULES } from '@/constants/modules';
+import { useAssetStore } from '@/stores/assetStore';
 
 const ModuleAllocationChart: React.FC = () => {
+  const { allocation } = useAssetStore();
+
+  // 从store获取真实数据
+  const chartData = allocation ? [
+    {
+      value: allocation.dividend?.currentWeight || 25,
+      name: '红利',
+      itemStyle: {
+        color: MODULES.dividend.color,
+        borderRadius: 0,
+        borderWidth: 2,
+        borderColor: '#fff',
+      },
+    },
+    {
+      value: allocation.fixed?.currentWeight || 25,
+      name: '固收',
+      itemStyle: {
+        color: MODULES.fixed.color,
+        borderRadius: 0,
+        borderWidth: 2,
+        borderColor: '#fff',
+      },
+    },
+    {
+      value: allocation.growth?.currentWeight || 25,
+      name: '成长',
+      itemStyle: {
+        color: MODULES.growth.color,
+        borderRadius: 0,
+        borderWidth: 2,
+        borderColor: '#fff',
+      },
+    },
+    {
+      value: allocation.allweather?.currentWeight || 25,
+      name: '全天候',
+      itemStyle: {
+        color: MODULES.allweather.color,
+        borderRadius: 0,
+        borderWidth: 2,
+        borderColor: '#fff',
+      },
+    },
+  ] : [
+    { value: 25, name: '红利', itemStyle: { color: MODULES.dividend.color, borderRadius: 0, borderWidth: 2, borderColor: '#fff' } },
+    { value: 25, name: '固收', itemStyle: { color: MODULES.fixed.color, borderRadius: 0, borderWidth: 2, borderColor: '#fff' } },
+    { value: 25, name: '成长', itemStyle: { color: MODULES.growth.color, borderRadius: 0, borderWidth: 2, borderColor: '#fff' } },
+    { value: 25, name: '全天候', itemStyle: { color: MODULES.allweather.color, borderRadius: 0, borderWidth: 2, borderColor: '#fff' } },
+  ];
+
   const option: EChartsOption = {
     tooltip: {
       trigger: 'item',
-      formatter: '{a} <br/>{b} : {c} ({d}%)',
+      formatter: '{a} <br/>{b} : {c}%',
     },
     legend: {
       orient: 'vertical',
@@ -42,48 +94,7 @@ const ModuleAllocationChart: React.FC = () => {
         labelLine: {
           show: false,
         },
-        data: [
-          {
-            value: 25,
-            name: '成长',
-            itemStyle: {
-              color: MODULES.growth.color,
-              borderRadius: 0,
-              borderWidth: 2,
-              borderColor: '#fff',
-            },
-          },
-          {
-            value: 25,
-            name: '红利',
-            itemStyle: {
-              color: MODULES.dividend.color,
-              borderRadius: 0,
-              borderWidth: 2,
-              borderColor: '#fff',
-            },
-          },
-          {
-            value: 25,
-            name: '固收',
-            itemStyle: {
-              color: MODULES.fixed.color,
-              borderRadius: 0,
-              borderWidth: 2,
-              borderColor: '#fff',
-            },
-          },
-          {
-            value: 25,
-            name: '全天候',
-            itemStyle: {
-              color: MODULES.allweather.color,
-              borderRadius: 0,
-              borderWidth: 2,
-              borderColor: '#fff',
-            },
-          },
-        ],
+        data: chartData,
       },
     ],
   };
@@ -91,13 +102,13 @@ const ModuleAllocationChart: React.FC = () => {
   return (
     <Card
       title={
-        <span style={{ fontSize: 16, fontWeight: 600, color: '#2d3748' }}>
+        <span style={{ fontSize: 16, fontWeight: 600, color: '#262626' }}>
           📊 资产配置
         </span>
       }
       style={{
-        borderRadius: 16,
-        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)',
+        borderRadius: 12,
+        border: '1px solid #F0F0F0',
         height: '360px',
       }}
       styles={{ body: { padding: '16px', height: 'calc(100% - 56px)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }}
