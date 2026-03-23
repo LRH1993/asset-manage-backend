@@ -3,8 +3,8 @@
  */
 
 import { create } from 'zustand';
-import { getTransactions, getTransactionDetail, createTransaction } from '@/api/transaction';
-import type { Transaction, TransactionRequest } from '@/api/transaction';
+import { getTransactions, getTransactionById, createTransaction } from '@/api/transaction';
+import type { Transaction, TransactionRequest } from '@/types/transaction';
 
 interface TransactionState {
   transactions: Transaction[];
@@ -37,7 +37,7 @@ export const useTransactionStore = create<TransactionState>((set) => ({
   fetchTransactionDetail: async (id) => {
     set({ loading: true, error: null });
     try {
-      const data = await getTransactionDetail(id);
+      const data = await getTransactionById(id);
       set({ currentTransaction: data, loading: false });
     } catch (error: any) {
       set({ error: error.message, loading: false });

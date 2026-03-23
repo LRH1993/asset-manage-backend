@@ -1,69 +1,55 @@
 import api from './axios';
+import type { Transaction, TransactionQuery, TransactionRequest, TransactionSummary } from '@/types/transaction';
 
-/**
- * 交易实体
- */
-export interface Transaction {
-  id: number;
-  positionId?: number;
-  symbol: string;
-  positionName?: string;
-  transactionType: 'buy' | 'sell';
-  shares: number;
-  price: number;
-  totalAmount: number;
-  fee: number;
-  currency: string;
-  transactionDate: string;
-  notes?: string;
-  createTime: string;
-}
-
-/**
- * 交易请求参数
- */
-export interface TransactionRequest {
-  positionId?: number;
-  symbol: string;
-  transactionType: 'buy' | 'sell';
-  shares: number;
-  price: number;
-  totalAmount: number;
-  fee: number;
-  currency?: string;
-  transactionDate: string;
-  notes?: string;
-}
-
-/**
- * 交易查询参数
- */
-export interface TransactionQuery {
-  page?: number;
-  pageSize?: number;
-  symbol?: string;
-  transactionType?: 'buy' | 'sell';
-  startDate?: string;
-  endDate?: string;
+interface PageResponse<T> {
+  records: T[];
+  total: number;
+  size: number;
+  current: number;
 }
 
 /**
  * 获取交易列表
  */
-export const getTransactions = (params?: TransactionQuery): Promise<{ list: Transaction[]; total: number }> => {
-  return api.get('/transactions', { params });
+export const getTransactions = async (params?: TransactionQuery): Promise<{ list: Transaction[]; total: number }> => {
+  const response = await api.get('/transactions', { params }) as PageResponse<Transaction>;
+  return {
+    list: response.records,
+    total: response.total,
+  };
 };
 
 /**
  * 获取交易详情
  */
-export const getTransactionDetail = (id: number): Promise<Transaction> => {
-  return api.get(`/transactions/${id}`);
+export const getTransactionById = async (id: number): Promise<Transaction> => {
+  return await api.get(`/transactions/${id}`) as unknown as Transaction;
 };
 
 /**
  * 创建交易
  */
-export const createTransaction = (data: TransactionRequest): Promise<void> => {
-  return api.post('/transactions', data);
+export const createTransaction = async (data: TransactionRequest): Promise<number> => {
+  return await api.post('/transactions', data) as unknown as number;
+};
+
+/**
+ * 更新交易
+ */
+export const updateTransaction = async (id: number, data: TransactionRequest): Promise<void> => {
+  await api.put(`/transactions/${id}`, data);
+};
+
+/**
+ * 删除交易
+ */
+export const deleteTransaction = async (id: number): Promise<void> => {
+  await api.delete(`/transactions/${id}`);
+};
+
+/**
+ * 获取交易汇总统计
+ */
+export const getTransactionSummary = async (): Promise<TransactionSummary> => {
+  return await api.get('/transactions/summary') as unknown as TransactionSummary;
 };

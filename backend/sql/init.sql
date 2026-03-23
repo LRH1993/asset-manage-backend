@@ -24,6 +24,7 @@ CREATE TABLE `positions` (
     `avg_cost` DECIMAL(18, 4) DEFAULT NULL COMMENT '平均成本',
     `current_price` DECIMAL(18, 4) DEFAULT NULL COMMENT '当前价格',
     `current_value` DECIMAL(18, 4) DEFAULT NULL COMMENT '当前市值',
+    `prev_close_price` DECIMAL(18, 4) DEFAULT NULL COMMENT '昨日收盘价（用于计算今日盈亏）',
     `target_weight` DECIMAL(5, 2) DEFAULT NULL COMMENT '目标权重',
     `buy_price_threshold` DECIMAL(18, 4) DEFAULT NULL COMMENT '买入价格阈值',
     `sell_price_threshold` DECIMAL(18, 4) DEFAULT NULL COMMENT '卖出价格阈值',

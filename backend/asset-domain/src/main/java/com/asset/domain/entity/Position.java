@@ -64,6 +64,11 @@ public class Position {
     private BigDecimal currentValue;
 
     /**
+     * 昨日收盘价（用于计算今日盈亏）
+     */
+    private BigDecimal prevClosePrice;
+
+    /**
      * 目标权重
      */
     private BigDecimal targetWeight;

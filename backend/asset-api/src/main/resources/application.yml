@@ -39,3 +39,19 @@ logging:
   level:
     com.asset: DEBUG
     org.springframework: INFO
+
+# 行情数据配置
+market-data:
+  timeout: 10000
+  retry-count: 3
+  batch-interval: 500
+  east-money:
+    stock-url: https://push2.eastmoney.com/api/qt/stock/get
+    batch-url: https://push2.eastmoney.com/api/qt/ulist.np
+    fund-url: https://fundgz.1234567.com.cn/js
+  yahoo:
+    base-url: https://query1.finance.yahoo.com/v8/finance/chart
+    request-interval: 200
+  fund:
+    url: https://fundgz.1234567.com.cn/js
+    detail-url: https://fund.eastmoney.com/pingzhongdata

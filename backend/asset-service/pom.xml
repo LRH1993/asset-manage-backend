@@ -24,6 +24,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Integration (for QuoteData and MarketDataProvider) -->
+        <dependency>
+            <groupId>com.asset</groupId>
+            <artifactId>asset-integration</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Spring Boot Starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

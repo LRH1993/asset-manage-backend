@@ -13,7 +13,9 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan(basePackages = {
     "com.asset.api",
     "com.asset.service",
-    "com.asset.domain"
+    "com.asset.domain",
+    "com.asset.common",
+    "com.asset.integration"
 })
 public class AssetApplication {
 

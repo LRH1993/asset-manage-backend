@@ -19,7 +19,13 @@ const MainLayout: React.FC = () => {
       <Sidebar />
       <Layout style={{ marginLeft: sidebarCollapsed ? 80 : 256, transition: 'all 0.2s' }}>
         <Header />
-        <Content style={{ margin: '24px 16px', padding: 24, background: '#fff', minHeight: 280 }}>
+        <Content
+          style={{
+            background: '#F5F5F5',
+            minHeight: 'calc(100vh - 64px)',
+            padding: 24,
+          }}
+        >
           <Outlet />
         </Content>
       </Layout>
