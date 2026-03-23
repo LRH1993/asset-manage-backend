@@ -6,6 +6,7 @@ import com.asset.domain.repository.PositionRepository;
 import com.asset.domain.repository.PriceHistoryRepository;
 import com.asset.integration.model.MarketType;
 import com.asset.integration.model.QuoteData;
+import com.asset.integration.model.TradingCalendar;
 import com.asset.integration.provider.MarketDataProvider;
 import com.asset.service.MarketDataService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -232,11 +233,34 @@ public class MarketDataServiceImpl implements MarketDataService {
     }
 
     @Override
+    public boolean isTradingDay(LocalDate date, String symbol) {
+        TradingCalendar.Market market = getMarketFromSymbol(symbol);
+        return TradingCalendar.isTradingDay(date, market);
+    }
+
+    @Override
     public boolean isTradingDay() {
-        // 简单判断：周六、周日不是交易日
-        LocalDate today = LocalDate.now();
-        int dayOfWeek = today.getDayOfWeek().getValue();
-        return dayOfWeek >= 1 && dayOfWeek <= 5;
+        // 默认使用A股交易日历
+        return TradingCalendar.isTradingDay(LocalDate.now(), TradingCalendar.Market.A_SHARE);
+    }
+
+    @Override
+    public LocalDate getNextTradingDay(LocalDate date, String symbol) {
+        TradingCalendar.Market market = getMarketFromSymbol(symbol);
+        return TradingCalendar.getNextTradingDay(date, market);
+    }
+
+    /**
+     * 根据标的代码获取市场类型
+     */
+    private TradingCalendar.Market getMarketFromSymbol(String symbol) {
+        MarketType marketType = MarketType.fromSymbol(symbol);
+        return switch (marketType) {
+            case SH, SZ, ETF -> TradingCalendar.Market.A_SHARE;
+            case HK -> TradingCalendar.Market.HK;
+            case US -> TradingCalendar.Market.US;
+            case FUND -> TradingCalendar.Market.FUND;
+        };
     }
 
     /**

@@ -2,6 +2,7 @@ package com.asset.service;
 
 import com.asset.integration.model.QuoteData;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -42,9 +43,27 @@ public interface MarketDataService {
     QuoteData refreshPosition(String symbol);
 
     /**
-     * 判断是否为交易日
+     * 判断指定日期是否为交易日（根据标的所属市场）
+     *
+     * @param date   日期
+     * @param symbol 标的代码（用于判断市场）
+     * @return 是否为交易日
+     */
+    boolean isTradingDay(LocalDate date, String symbol);
+
+    /**
+     * 判断今天是否为交易日（默认A股）
      *
      * @return 是否为交易日
      */
     boolean isTradingDay();
+
+    /**
+     * 获取指定市场的下一个交易日
+     *
+     * @param date   日期
+     * @param symbol 标的代码
+     * @return 下一个交易日
+     */
+    LocalDate getNextTradingDay(LocalDate date, String symbol);
 }
