@@ -29,12 +29,13 @@ public class Position {
     private String name;
 
     /**
-     * 所属模块
+     * 所属模块（dividend/fixed/growth/allweather）
      */
     private String module;
 
     /**
-     * 市场
+     * 市场类型（a_stock/etf/fund/hk_stock/us_stock）
+     * A股:a_stock, 场内ETF:etf, 场外基金:fund, 港股:hk_stock, 美股:us_stock
      */
     private String market;
 

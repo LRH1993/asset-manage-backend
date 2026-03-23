@@ -35,6 +35,11 @@ public class TransactionVO {
     private String module;
 
     /**
+     * 市场类型（a_stock/etf/fund/hk_stock/us_stock）
+     */
+    private String market;
+
+    /**
      * 交易类型
      */
     private String transactionType;

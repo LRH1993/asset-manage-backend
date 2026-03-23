@@ -49,23 +49,14 @@ public class TransactionServiceImpl implements TransactionService {
             wrapper.eq(Transaction::getTransactionType, request.getTransactionType());
         }
 
-        // 模块筛选（通过关联持仓表）
+        // 模块筛选
         if (StringUtils.hasText(request.getModule())) {
-            // 先查询该模块下的所有持仓ID
-            List<Position> positions = positionRepository.selectList(
-                    new LambdaQueryWrapper<Position>()
-                            .eq(Position::getModule, request.getModule())
-                            .eq(Position::getDeleted, 0)
-            );
-            if (!positions.isEmpty()) {
-                List<Long> positionIds = positions.stream()
-                        .map(Position::getId)
-                        .collect(Collectors.toList());
-                wrapper.in(Transaction::getPositionId, positionIds);
-            } else {
-                // 没有匹配的持仓，返回空结果
-                wrapper.eq(Transaction::getId, -1L);
-            }
+            wrapper.eq(Transaction::getModule, request.getModule());
+        }
+
+        // 市场类型筛选
+        if (StringUtils.hasText(request.getMarket())) {
+            wrapper.eq(Transaction::getMarket, request.getMarket());
         }
 
         // 关键词搜索
@@ -110,6 +101,9 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction transaction = new Transaction();
         transaction.setPositionId(request.getPositionId());
         transaction.setSymbol(request.getSymbol());
+        transaction.setName(request.getName());
+        transaction.setModule(request.getModule());
+        transaction.setMarket(request.getMarket());
         transaction.setTransactionType(request.getTransactionType());
         transaction.setShares(request.getShares());
         transaction.setPrice(request.getPrice());
@@ -125,7 +119,9 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTotalAmount(totalAmount);
 
         transactionRepository.insert(transaction);
-        log.info("创建交易记录成功: id={}, symbol={}, type={}", transaction.getId(), transaction.getSymbol(), transaction.getTransactionType());
+        log.info("创建交易记录成功: id={}, symbol={}, type={}, module={}, market={}",
+                transaction.getId(), transaction.getSymbol(), transaction.getTransactionType(),
+                transaction.getModule(), transaction.getMarket());
         return transaction.getId();
     }
 
@@ -139,6 +135,9 @@ public class TransactionServiceImpl implements TransactionService {
 
         transaction.setPositionId(request.getPositionId());
         transaction.setSymbol(request.getSymbol());
+        transaction.setName(request.getName());
+        transaction.setModule(request.getModule());
+        transaction.setMarket(request.getMarket());
         transaction.setTransactionType(request.getTransactionType());
         transaction.setShares(request.getShares());
         transaction.setPrice(request.getPrice());
@@ -252,6 +251,9 @@ public class TransactionServiceImpl implements TransactionService {
         vo.setId(transaction.getId());
         vo.setPositionId(transaction.getPositionId());
         vo.setSymbol(transaction.getSymbol());
+        vo.setName(transaction.getName());
+        vo.setModule(transaction.getModule());
+        vo.setMarket(transaction.getMarket());
         vo.setTransactionType(transaction.getTransactionType());
         vo.setShares(transaction.getShares());
         vo.setPrice(transaction.getPrice());
@@ -262,12 +264,11 @@ public class TransactionServiceImpl implements TransactionService {
         vo.setNotes(transaction.getNotes());
         vo.setCreateTime(transaction.getCreateTime());
 
-        // 获取持仓信息
-        if (transaction.getPositionId() != null) {
+        // 如果交易记录没有name，尝试从持仓获取
+        if (vo.getName() == null && transaction.getPositionId() != null) {
             Position position = positionRepository.selectById(transaction.getPositionId());
             if (position != null) {
                 vo.setName(position.getName());
-                vo.setModule(position.getModule());
             }
         }
 

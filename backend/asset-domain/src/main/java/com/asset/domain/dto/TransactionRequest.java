@@ -26,6 +26,21 @@ public class TransactionRequest {
     private String symbol;
 
     /**
+     * 标的名称
+     */
+    private String name;
+
+    /**
+     * 所属模块（dividend/fixed/growth/allweather）
+     */
+    private String module;
+
+    /**
+     * 市场类型（a_stock/etf/fund/hk_stock/us_stock）
+     */
+    private String market;
+
+    /**
      * 交易类型
      */
     @NotBlank(message = "交易类型不能为空")

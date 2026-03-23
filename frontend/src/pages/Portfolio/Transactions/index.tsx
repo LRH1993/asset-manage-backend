@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import {
   Table, Button, Modal, Form, Input, InputNumber,
-  message, Select, DatePicker, Empty, Skeleton
+  message, Select, DatePicker, Empty, Skeleton, Radio
 } from 'antd';
 import {
   PlusOutlined,
@@ -27,6 +27,15 @@ const MODULE_CONFIG: Record<string, { name: string; emoji: string; color: string
   fixed: { name: '固收', emoji: '🟦', color: '#1890FF', bgColor: '#E6F7FF', borderColor: 'rgba(24, 144, 255, 0.3)' },
   growth: { name: '成长', emoji: '🟪', color: '#722ED1', bgColor: '#F9F0FF', borderColor: 'rgba(114, 46, 209, 0.3)' },
   allweather: { name: '全天候', emoji: '🟧', color: '#FA8C16', bgColor: '#FFF7E6', borderColor: 'rgba(250, 140, 22, 0.3)' },
+};
+
+// 市场类型配置
+const MARKET_TYPE_CONFIG: Record<string, { name: string; emoji: string }> = {
+  a_stock: { name: 'A股', emoji: '📈' },
+  etf: { name: '场内ETF', emoji: '📊' },
+  fund: { name: '场外基金', emoji: '🏦' },
+  hk_stock: { name: '港股', emoji: '🌏' },
+  us_stock: { name: '美股', emoji: '🇺🇸' },
 };
 
 // 汇总卡片组件
@@ -261,6 +270,27 @@ const Transactions: React.FC = () => {
             border: `1px solid ${config.borderColor}`,
           }}>
             {config.name}
+          </span>
+        );
+      },
+    },
+    {
+      title: '市场',
+      dataIndex: 'market',
+      key: 'market',
+      width: 100,
+      align: 'center',
+      render: (market) => {
+        const config = MARKET_TYPE_CONFIG[market] || { name: market || 'A股', emoji: '📈' };
+        return (
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: 13,
+          }}>
+            <span>{config.emoji}</span>
+            <span>{config.name}</span>
           </span>
         );
       },
@@ -619,6 +649,31 @@ const Transactions: React.FC = () => {
             rules={[{ required: true, message: '请输入标的代码' }]}
           >
             <Input placeholder="输入代码，如: 600519.SH" />
+          </Form.Item>
+
+          <Form.Item
+            name="module"
+            label="所属模块 *"
+            rules={[{ required: true, message: '请选择模块' }]}
+          >
+            <Radio.Group>
+              {Object.entries(MODULE_CONFIG).map(([key, config]) => (
+                <Radio.Button key={key} value={key}>{config.emoji} {config.name}</Radio.Button>
+              ))}
+            </Radio.Group>
+          </Form.Item>
+
+          <Form.Item
+            name="market"
+            label="市场类型 *"
+            rules={[{ required: true, message: '请选择市场类型' }]}
+            initialValue="a_stock"
+          >
+            <Radio.Group>
+              {Object.entries(MARKET_TYPE_CONFIG).map(([key, config]) => (
+                <Radio.Button key={key} value={key}>{config.emoji} {config.name}</Radio.Button>
+              ))}
+            </Radio.Group>
           </Form.Item>
 
           <Form.Item name="transactionDate" label="交易日期 *" rules={[{ required: true }]}>

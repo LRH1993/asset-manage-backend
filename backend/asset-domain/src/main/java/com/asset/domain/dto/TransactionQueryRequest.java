@@ -29,6 +29,11 @@ public class TransactionQueryRequest {
     private String module;
 
     /**
+     * 市场类型筛选
+     */
+    private String market;
+
+    /**
      * 标的代码/名称关键词
      */
     private String keyword;
