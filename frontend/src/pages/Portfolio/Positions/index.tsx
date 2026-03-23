@@ -162,8 +162,6 @@ const Positions: React.FC = () => {
         ...values,
         shares: Number(values.shares),
         avgCost: Number(values.avgCost),
-        currentPrice: values.currentPrice ? Number(values.currentPrice) : undefined,
-        targetWeight: values.targetWeight ? Number(values.targetWeight) : undefined,
         buyPriceThreshold: values.buyPriceThreshold ? Number(values.buyPriceThreshold) : undefined,
         sellPriceThreshold: values.sellPriceThreshold ? Number(values.sellPriceThreshold) : undefined,
       };
@@ -678,19 +676,6 @@ const Positions: React.FC = () => {
             <Col span={12}>
               <Form.Item name="avgCost" label="成本价 *" rules={[{ required: true }]}>
                 <InputNumber style={{ width: '100%' }} min={0} precision={2} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="currentPrice" label="当前价格">
-                <InputNumber style={{ width: '100%' }} min={0} precision={2} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="targetWeight" label="目标权重 (%)">
-                <InputNumber style={{ width: '100%' }} min={0} max={100} precision={2} />
               </Form.Item>
             </Col>
           </Row>
