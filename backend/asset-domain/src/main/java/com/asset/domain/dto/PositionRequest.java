@@ -17,24 +17,17 @@ public class PositionRequest {
     @NotBlank(message = "标的代码不能为空")
     private String symbol;
 
-    @NotBlank(message = "标的名称不能为空")
     private String name;
 
     @NotBlank(message = "所属模块不能为空")
     private String module;
 
+    @NotBlank(message = "市场类型不能为空")
     private String market;
-    private String assetType;
 
     @NotNull(message = "持仓数量不能为空")
     private BigDecimal shares;
 
     @NotNull(message = "平均成本不能为空")
     private BigDecimal avgCost;
-
-    private BigDecimal currentPrice;
-    private BigDecimal targetWeight;
-    private BigDecimal buyPriceThreshold;
-    private BigDecimal sellPriceThreshold;
-    private String remarks;
 }

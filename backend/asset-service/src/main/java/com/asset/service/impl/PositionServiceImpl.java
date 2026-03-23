@@ -112,23 +112,12 @@ public class PositionServiceImpl implements PositionService {
         position.setName(request.getName());
         position.setModule(request.getModule());
         position.setMarket(request.getMarket());
-        position.setAssetType(request.getAssetType());
         position.setShares(request.getShares());
         position.setAvgCost(request.getAvgCost());
-        position.setCurrentPrice(request.getCurrentPrice());
-        position.setTargetWeight(request.getTargetWeight());
-        position.setBuyPriceThreshold(request.getBuyPriceThreshold());
-        position.setSellPriceThreshold(request.getSellPriceThreshold());
-        position.setRemarks(request.getRemarks());
         position.setStatus("active");
         position.setCreateTime(LocalDateTime.now());
         position.setUpdateTime(LocalDateTime.now());
         position.setDeleted(0);
-
-        // 计算当前市值
-        if (request.getCurrentPrice() != null && request.getShares() != null) {
-            position.setCurrentValue(request.getCurrentPrice().multiply(request.getShares()));
-        }
 
         positionRepository.insert(position);
         log.info("创建持仓成功: id={}, symbol={}", position.getId(), position.getSymbol());
@@ -147,20 +136,9 @@ public class PositionServiceImpl implements PositionService {
         position.setName(request.getName());
         position.setModule(request.getModule());
         position.setMarket(request.getMarket());
-        position.setAssetType(request.getAssetType());
         position.setShares(request.getShares());
         position.setAvgCost(request.getAvgCost());
-        position.setCurrentPrice(request.getCurrentPrice());
-        position.setTargetWeight(request.getTargetWeight());
-        position.setBuyPriceThreshold(request.getBuyPriceThreshold());
-        position.setSellPriceThreshold(request.getSellPriceThreshold());
-        position.setRemarks(request.getRemarks());
         position.setUpdateTime(LocalDateTime.now());
-
-        // 重新计算市值
-        if (request.getCurrentPrice() != null && request.getShares() != null) {
-            position.setCurrentValue(request.getCurrentPrice().multiply(request.getShares()));
-        }
 
         positionRepository.updateById(position);
         log.info("更新持仓成功: id={}, symbol={}", id, position.getSymbol());
@@ -385,16 +363,11 @@ public class PositionServiceImpl implements PositionService {
         vo.setName(position.getName());
         vo.setModule(position.getModule());
         vo.setMarket(position.getMarket());
-        vo.setAssetType(position.getAssetType());
         vo.setShares(position.getShares());
         vo.setAvgCost(position.getAvgCost());
         vo.setCurrentPrice(position.getCurrentPrice());
         vo.setCurrentValue(position.getCurrentValue());
-        vo.setTargetWeight(position.getTargetWeight());
-        vo.setBuyPriceThreshold(position.getBuyPriceThreshold());
-        vo.setSellPriceThreshold(position.getSellPriceThreshold());
         vo.setStatus(position.getStatus());
-        vo.setRemarks(position.getRemarks());
         vo.setCreateTime(position.getCreateTime());
         vo.setUpdateTime(position.getUpdateTime());
 

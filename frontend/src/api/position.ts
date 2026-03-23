@@ -9,7 +9,6 @@ export interface Position {
   name: string;
   module: 'dividend' | 'fixed' | 'growth' | 'allweather';
   market: string;
-  assetType: string;
   shares: number;
   avgCost: number;
   currentPrice: number;
@@ -17,13 +16,9 @@ export interface Position {
   costValue: number;
   profitAmount: number;
   profitRate: number;
-  todayProfitRate?: number;  // 今日盈亏率（可选）
-  targetWeight: number;
+  todayProfitRate?: number;
   actualWeight?: number;
-  buyPriceThreshold?: number;
-  sellPriceThreshold?: number;
   status: string;
-  remarks?: string;
   createTime: string;
   updateTime: string;
 }
@@ -34,17 +29,11 @@ export interface Position {
 export interface PositionRequest {
   id?: number;
   symbol: string;
-  name: string;
+  name?: string;
   module: string;
-  market?: string;
-  assetType?: string;
+  market: string;
   shares: number;
   avgCost: number;
-  currentPrice?: number;
-  targetWeight?: number;
-  buyPriceThreshold?: number;
-  sellPriceThreshold?: number;
-  remarks?: string;
 }
 
 /**

@@ -16,7 +16,6 @@ public class PositionVO {
     private String name;
     private String module;
     private String market;
-    private String assetType;
     private BigDecimal shares;
     private BigDecimal avgCost;
     private BigDecimal currentPrice;
@@ -24,12 +23,8 @@ public class PositionVO {
     private BigDecimal costValue;
     private BigDecimal profitAmount;
     private BigDecimal profitRate;
-    private BigDecimal targetWeight;
     private BigDecimal actualWeight;
-    private BigDecimal buyPriceThreshold;
-    private BigDecimal sellPriceThreshold;
     private String status;
-    private String remarks;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 

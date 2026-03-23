@@ -40,11 +40,6 @@ public class Position {
     private String market;
 
     /**
-     * 资产类型
-     */
-    private String assetType;
-
-    /**
      * 持仓数量
      */
     private BigDecimal shares;
@@ -55,12 +50,12 @@ public class Position {
     private BigDecimal avgCost;
 
     /**
-     * 当前价格
+     * 当前价格（每日行情更新）
      */
     private BigDecimal currentPrice;
 
     /**
-     * 当前市值
+     * 当前市值（计算得出）
      */
     private BigDecimal currentValue;
 
@@ -70,29 +65,9 @@ public class Position {
     private BigDecimal prevClosePrice;
 
     /**
-     * 目标权重
-     */
-    private BigDecimal targetWeight;
-
-    /**
-     * 买入价格阈值
-     */
-    private BigDecimal buyPriceThreshold;
-
-    /**
-     * 卖出价格阈值
-     */
-    private BigDecimal sellPriceThreshold;
-
-    /**
-     * 状态
+     * 状态（active/inactive/sold）
      */
     private String status;
-
-    /**
-     * 备注
-     */
-    private String remarks;
 
     /**
      * 创建时间
