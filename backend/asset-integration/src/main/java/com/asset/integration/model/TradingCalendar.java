@@ -1,17 +1,21 @@
 package com.asset.integration.model;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 交易日历
  * 支持判断各市场是否为交易日
+ * 数据来源：内置数据 + 可通过 API 更新
  */
+@Slf4j
 public class TradingCalendar {
 
     /**
@@ -33,6 +37,14 @@ public class TradingCalendar {
             this.code = code;
         }
     }
+
+    /** 动态休市日期缓存 */
+    private static final ConcurrentHashMap<String, Set<LocalDate>> DYNAMIC_HOLIDAYS = new ConcurrentHashMap<>();
+
+    /** 动态调休补班日缓存 */
+    private static final ConcurrentHashMap<String, Set<LocalDate>> DYNAMIC_WORKDAYS = new ConcurrentHashMap<>();
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
      * 2024-2026年A股休市日期（含港股通休市）
@@ -256,7 +268,13 @@ public class TradingCalendar {
      * 判断A股是否为交易日
      */
     private static boolean isChinaTradingDay(LocalDate date) {
-        // 检查是否为周末补班日
+        // 优先检查动态调休补班日
+        Set<LocalDate> dynamicWorkdays = DYNAMIC_WORKDAYS.get("CN");
+        if (dynamicWorkdays != null && dynamicWorkdays.contains(date)) {
+            return true;
+        }
+
+        // 检查内置调休补班日
         if (CN_WORKDAYS_ON_WEEKEND.contains(date)) {
             return true;
         }
@@ -267,7 +285,13 @@ public class TradingCalendar {
             return false;
         }
 
-        // 检查是否为节假日
+        // 优先检查动态休市日
+        Set<LocalDate> dynamicHolidays = DYNAMIC_HOLIDAYS.get("CN");
+        if (dynamicHolidays != null && dynamicHolidays.contains(date)) {
+            return false;
+        }
+
+        // 检查内置节假日
         return !CN_HOLIDAYS.contains(date);
     }
 
@@ -281,7 +305,13 @@ public class TradingCalendar {
             return false;
         }
 
-        // 检查是否为公众假期
+        // 优先检查动态休市日
+        Set<LocalDate> dynamicHolidays = DYNAMIC_HOLIDAYS.get("HK");
+        if (dynamicHolidays != null && dynamicHolidays.contains(date)) {
+            return false;
+        }
+
+        // 检查内置公众假期
         return !HK_HOLIDAYS.contains(date);
     }
 
@@ -295,7 +325,13 @@ public class TradingCalendar {
             return false;
         }
 
-        // 检查是否为节假日
+        // 优先检查动态休市日
+        Set<LocalDate> dynamicHolidays = DYNAMIC_HOLIDAYS.get("US");
+        if (dynamicHolidays != null && dynamicHolidays.contains(date)) {
+            return false;
+        }
+
+        // 检查内置节假日
         return !US_HOLIDAYS.contains(date);
     }
 
@@ -319,5 +355,82 @@ public class TradingCalendar {
             prevDay = prevDay.minusDays(1);
         }
         return prevDay;
+    }
+
+    /**
+     * 添加动态休市日期
+     *
+     * @param market  市场代码（CN/HK/US）
+     * @param dateStr 日期字符串（yyyy-MM-dd）
+     */
+    public static void addHoliday(String market, String dateStr) {
+        LocalDate date = LocalDate.parse(dateStr, DATE_FORMATTER);
+        DYNAMIC_HOLIDAYS.computeIfAbsent(market, k -> ConcurrentHashMap.newKeySet()).add(date);
+        log.info("添加休市日期: market={}, date={}", market, dateStr);
+    }
+
+    /**
+     * 批量添加动态休市日期
+     *
+     * @param market   市场代码
+     * @param dateStrs 日期字符串列表
+     */
+    public static void addHolidays(String market, Iterable<String> dateStrs) {
+        Set<LocalDate> dates = DYNAMIC_HOLIDAYS.computeIfAbsent(market, k -> ConcurrentHashMap.newKeySet());
+        for (String dateStr : dateStrs) {
+            try {
+                LocalDate date = LocalDate.parse(dateStr, DATE_FORMATTER);
+                dates.add(date);
+            } catch (Exception e) {
+                log.warn("解析日期失败: {}", dateStr);
+            }
+        }
+        log.info("批量添加休市日期: market={}, count={}", market, dates.size());
+    }
+
+    /**
+     * 添加动态调休补班日
+     *
+     * @param dateStr 日期字符串（yyyy-MM-dd）
+     */
+    public static void addWorkday(String dateStr) {
+        LocalDate date = LocalDate.parse(dateStr, DATE_FORMATTER);
+        DYNAMIC_WORKDAYS.computeIfAbsent("CN", k -> ConcurrentHashMap.newKeySet()).add(date);
+        log.info("添加调休补班日: date={}", dateStr);
+    }
+
+    /**
+     * 批量添加动态调休补班日
+     *
+     * @param dateStrs 日期字符串列表
+     */
+    public static void addWorkdays(Iterable<String> dateStrs) {
+        Set<LocalDate> dates = DYNAMIC_WORKDAYS.computeIfAbsent("CN", k -> ConcurrentHashMap.newKeySet());
+        for (String dateStr : dateStrs) {
+            try {
+                LocalDate date = LocalDate.parse(dateStr, DATE_FORMATTER);
+                dates.add(date);
+            } catch (Exception e) {
+                log.warn("解析日期失败: {}", dateStr);
+            }
+        }
+        log.info("批量添加调休补班日: count={}", dates.size());
+    }
+
+    /**
+     * 清除动态数据
+     */
+    public static void clearDynamicData() {
+        DYNAMIC_HOLIDAYS.clear();
+        DYNAMIC_WORKDAYS.clear();
+        log.info("已清除动态交易日历数据");
+    }
+
+    /**
+     * 获取动态休市日数量
+     */
+    public static int getDynamicHolidayCount(String market) {
+        Set<LocalDate> dates = DYNAMIC_HOLIDAYS.get(market);
+        return dates != null ? dates.size() : 0;
     }
 }
