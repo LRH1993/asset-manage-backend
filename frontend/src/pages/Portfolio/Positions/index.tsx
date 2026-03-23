@@ -19,6 +19,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { PROFIT_COLORS, NEUTRAL_COLORS } from '@/constants/colors';
 import { formatMoney, getProfitColor, formatShares } from '@/utils/format';
 import { PageHeader } from '@/components/common';
+import dayjs from 'dayjs';
 
 // 模块配置 - 符合 UI 设计规范，添加 emoji
 const MODULE_CONFIG: Record<string, { name: string; emoji: string; color: string; bgColor: string; borderColor: string }> = {
@@ -125,6 +126,56 @@ const Positions: React.FC = () => {
     const newParams = { status: status === 'all' ? undefined : status, pageNum: 1 };
     setQueryParams(newParams);
     fetchPositions(newParams);
+  };
+
+  // 处理排序
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const [sortBy, sortOrder] = e.target.value.split('_');
+    const newParams = { sortBy, sortOrder, pageNum: 1 };
+    setQueryParams(newParams);
+    fetchPositions(newParams);
+  };
+
+  // 导出持仓数据
+  const handleExport = () => {
+    if (positions.length === 0) {
+      message.warning('暂无数据可导出');
+      return;
+    }
+
+    const headers = ['标的代码', '标的名称', '模块', '市场类型', '持仓数量', '成本价', '现价', '市值', '今日盈亏%', '累计收益', '收益率%'];
+    const rows = positions.map(p => [
+      p.symbol,
+      p.name || '',
+      MODULE_CONFIG[p.module]?.name || p.module,
+      MARKET_TYPE_CONFIG[p.market]?.name || p.market,
+      p.shares,
+      p.avgCost?.toFixed(2) || '',
+      p.currentPrice?.toFixed(2) || '',
+      p.currentValue?.toFixed(2) || '',
+      p.todayProfitRate?.toFixed(2) || '',
+      p.profitAmount?.toFixed(2) || '',
+      p.profitRate?.toFixed(2) || '',
+    ]);
+
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `持仓数据_${dayjs().format('YYYYMMDD')}.csv`;
+    link.click();
+    message.success('导出成功');
+  };
+
+  // 导入持仓数据
+  const handleImport = () => {
+    message.info('导入功能开发中，敬请期待');
+  };
+
+  // 快捷交易（买入/卖出）
+  const handleQuickTrade = (record: Position, type: 'buy' | 'sell') => {
+    message.info(`跳转到交易记录页面，自动填充${type === 'buy' ? '买入' : '卖出'}信息`);
+    // 可以跳转到交易记录页面并自动填充
   };
 
   // 处理表格变化（分页）
@@ -366,6 +417,7 @@ const Positions: React.FC = () => {
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(232, 93, 93, 0.1)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            onClick={() => handleQuickTrade(record, 'buy')}
           >
             买入
           </button>
@@ -381,6 +433,7 @@ const Positions: React.FC = () => {
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(76, 175, 80, 0.1)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            onClick={() => handleQuickTrade(record, 'sell')}
           >
             卖出
           </button>
@@ -416,8 +469,8 @@ const Positions: React.FC = () => {
         onRefresh={handleRefresh}
         actions={
           <>
-            <Button icon={<UploadOutlined />}>导入</Button>
-            <Button icon={<DownloadOutlined />}>导出</Button>
+            <Button icon={<UploadOutlined />} onClick={handleImport}>导入</Button>
+            <Button icon={<DownloadOutlined />} onClick={handleExport}>导出</Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>添加持仓</Button>
           </>
         }
@@ -573,11 +626,13 @@ const Positions: React.FC = () => {
               background: '#fff',
               cursor: 'pointer',
             }}
+            onChange={handleSortChange}
+            value={`${queryParams.sortBy || 'currentValue'}_${queryParams.sortOrder || 'desc'}`}
           >
-            <option>市值降序</option>
-            <option>市值升序</option>
-            <option>收益率降序</option>
-            <option>收益率升序</option>
+            <option value="currentValue_desc">市值降序</option>
+            <option value="currentValue_asc">市值升序</option>
+            <option value="profitRate_desc">收益率降序</option>
+            <option value="profitRate_asc">收益率升序</option>
           </select>
         </div>
       </div>
@@ -622,6 +677,8 @@ const Positions: React.FC = () => {
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
         width={600}
         destroyOnClose
       >

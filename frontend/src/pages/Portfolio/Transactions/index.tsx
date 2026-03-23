@@ -190,11 +190,73 @@ const Transactions: React.FC = () => {
     Modal.confirm({
       title: '确认删除',
       content: '确定要删除这条交易记录吗？',
+      okText: '确定',
+      cancelText: '取消',
       onOk: async () => {
         await deleteTransaction(id);
         message.success('删除成功');
         fetchData();
       },
+    });
+  };
+
+  // 导出交易数据
+  const handleExport = () => {
+    if (transactions.length === 0) {
+      message.warning('暂无数据可导出');
+      return;
+    }
+
+    const headers = ['交易日期', '交易类型', '标的代码', '标的名称', '模块', '市场', '数量', '价格', '成交金额', '手续费', '已实现收益'];
+    const rows = transactions.map(t => [
+      t.transactionDate,
+      t.transactionType === 'buy' ? '买入' : '卖出',
+      t.symbol,
+      t.name || '',
+      t.module ? MODULE_CONFIG[t.module]?.name || t.module : '',
+      t.market ? MARKET_TYPE_CONFIG[t.market]?.name || t.market : '',
+      t.shares,
+      t.price?.toFixed(2) || '',
+      t.totalAmount?.toFixed(2) || '',
+      t.fee?.toFixed(2) || '',
+      t.realizedProfit?.toFixed(2) || '',
+    ]);
+
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `交易记录_${dayjs().format('YYYYMMDD')}.csv`;
+    link.click();
+    message.success('导出成功');
+  };
+
+  // 导入交易数据
+  const handleImport = () => {
+    message.info('导入功能开发中，敬请期待');
+  };
+
+  // 查看详情
+  const handleDetail = (record: Transaction) => {
+    Modal.info({
+      title: '交易详情',
+      okText: '关闭',
+      content: (
+        <div style={{ marginTop: 16 }}>
+          <p><strong>交易日期：</strong>{record.transactionDate}</p>
+          <p><strong>交易类型：</strong>{record.transactionType === 'buy' ? '买入' : '卖出'}</p>
+          <p><strong>标的代码：</strong>{record.symbol}</p>
+          <p><strong>标的名称：</strong>{record.name || '-'}</p>
+          <p><strong>交易数量：</strong>{record.shares}</p>
+          <p><strong>成交价格：</strong>{record.price?.toFixed(2)}</p>
+          <p><strong>成交金额：</strong>{formatMoney(record.totalAmount)}</p>
+          <p><strong>手续费：</strong>{record.fee?.toFixed(2) || '0.00'}</p>
+          {record.transactionType === 'sell' && record.realizedProfit != null && (
+            <p><strong>已实现收益：</strong>{record.realizedProfit >= 0 ? '+' : ''}{formatMoney(record.realizedProfit)}</p>
+          )}
+          <p><strong>备注：</strong>{record.notes || '-'}</p>
+        </div>
+      ),
     });
   };
 
@@ -370,6 +432,7 @@ const Transactions: React.FC = () => {
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(24, 144, 255, 0.1)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            onClick={() => handleDetail(record)}
           >
             详情
           </button>
@@ -405,8 +468,8 @@ const Transactions: React.FC = () => {
         onRefresh={handleRefresh}
         actions={
           <>
-            <Button icon={<UploadOutlined />}>导入</Button>
-            <Button icon={<DownloadOutlined />}>导出</Button>
+            <Button icon={<UploadOutlined />} onClick={handleImport}>导入</Button>
+            <Button icon={<DownloadOutlined />} onClick={handleExport}>导出</Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>记录交易</Button>
           </>
         }
@@ -628,6 +691,8 @@ const Transactions: React.FC = () => {
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
         width={600}
         destroyOnClose
       >
