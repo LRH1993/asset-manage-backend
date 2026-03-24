@@ -29,13 +29,19 @@ const MODULE_CONFIG: Record<string, { name: string; emoji: string; color: string
   allweather: { name: '全天候', emoji: '🟧', color: '#FA8C16', bgColor: '#FFF7E6', borderColor: 'rgba(250, 140, 22, 0.3)' },
 };
 
-// 市场类型配置
+// 市场类型配置（支持新旧代码）
 const MARKET_TYPE_CONFIG: Record<string, { name: string; emoji: string }> = {
+  // 新代码
   a_stock: { name: 'A股', emoji: '📈' },
   etf: { name: '场内ETF', emoji: '📊' },
   fund: { name: '场外基金', emoji: '🏦' },
   hk_stock: { name: '港股', emoji: '🌏' },
   us_stock: { name: '美股', emoji: '🇺🇸' },
+  // 旧代码映射
+  sh: { name: 'A股', emoji: '📈' },
+  sz: { name: 'A股', emoji: '📈' },
+  hk: { name: '港股', emoji: '🌏' },
+  us: { name: '美股', emoji: '🇺🇸' },
 };
 
 // 汇总卡片组件
@@ -353,6 +359,23 @@ const Positions: React.FC = () => {
     },
     {
       title: '今日盈亏',
+      dataIndex: 'todayProfitAmount',
+      key: 'todayProfitAmount',
+      width: 110,
+      align: 'right',
+      render: (value) => {
+        if (value === null || value === undefined) {
+          return <span style={{ color: '#8C8C8C', fontFamily: 'SF Mono, Monaco, monospace' }}>--</span>;
+        }
+        return (
+          <span style={{ color: getProfitColor(value), fontFamily: 'SF Mono, Monaco, monospace' }}>
+            {value >= 0 ? '+' : ''}{formatMoney(value)}
+          </span>
+        );
+      },
+    },
+    {
+      title: '涨跌幅',
       dataIndex: 'todayProfitRate',
       key: 'todayProfitRate',
       width: 90,
@@ -391,6 +414,23 @@ const Positions: React.FC = () => {
           {value >= 0 ? '+' : ''}{value ? value.toFixed(2) : '0.00'}%
         </span>
       ),
+    },
+    {
+      title: '行情更新',
+      dataIndex: 'updateTime',
+      key: 'updateTime',
+      width: 100,
+      align: 'center',
+      render: (value) => {
+        if (!value) {
+          return <span style={{ color: '#8C8C8C' }}>--</span>;
+        }
+        return (
+          <span style={{ fontSize: 12, color: '#8C8C8C' }}>
+            {dayjs(value).format('MM-DD HH:mm')}
+          </span>
+        );
+      },
     },
     {
       title: '操作',

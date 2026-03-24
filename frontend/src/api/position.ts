@@ -17,6 +17,7 @@ export interface Position {
   profitAmount: number;
   profitRate: number;
   todayProfitRate?: number;
+  todayProfitAmount?: number;
   actualWeight?: number;
   status: string;
   createTime: string;

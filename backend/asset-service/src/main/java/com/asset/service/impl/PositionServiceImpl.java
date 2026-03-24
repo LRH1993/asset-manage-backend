@@ -394,6 +394,14 @@ public class PositionServiceImpl implements PositionService {
         BigDecimal todayProfitRate = calculateTodayProfitRate(position);
         vo.setTodayProfitRate(todayProfitRate);
 
+        // 计算今日盈亏金额 = 市值 * 今日涨跌幅 / 100
+        if (todayProfitRate != null && position.getCurrentValue() != null) {
+            BigDecimal todayProfitAmount = position.getCurrentValue()
+                    .multiply(todayProfitRate)
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            vo.setTodayProfitAmount(todayProfitAmount);
+        }
+
         return vo;
     }
 

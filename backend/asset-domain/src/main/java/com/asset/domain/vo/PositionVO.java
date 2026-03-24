@@ -33,4 +33,10 @@ public class PositionVO {
      * 需要行情服务支持
      */
     private BigDecimal todayProfitRate;
+
+    /**
+     * 今日盈亏金额
+     * = 市值 * 今日涨跌幅 / 100
+     */
+    private BigDecimal todayProfitAmount;
 }
