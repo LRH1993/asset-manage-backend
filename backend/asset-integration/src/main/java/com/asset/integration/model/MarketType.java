@@ -53,16 +53,58 @@ public enum MarketType {
 
     /**
      * 根据代码获取市场类型
+     * 支持新代码(a_stock, etf, fund, hk_stock, us_stock)和旧代码(sh, sz, us, hk)
      */
     public static MarketType fromCode(String code) {
         if (code == null || code.isEmpty()) {
             return A_STOCK;
         }
+        String lowerCode = code.toLowerCase();
+
+        // 新代码匹配
         for (MarketType type : values()) {
             if (type.getCode().equalsIgnoreCase(code)) {
                 return type;
             }
         }
+
+        // 旧代码映射
+        return switch (lowerCode) {
+            case "sh", "sz" -> A_STOCK;  // 沪市/深市 -> A股
+            case "hk" -> HK_STOCK;        // 港股
+            case "us" -> US_STOCK;        // 美股
+            default -> A_STOCK;
+        };
+    }
+
+    /**
+     * 根据股票代码推断市场类型
+     * @param symbol 股票代码（如 SH600519, SZ000001, 00700.HK, AAPL.US）
+     * @return 市场类型
+     */
+    public static MarketType fromSymbol(String symbol) {
+        if (symbol == null || symbol.isEmpty()) {
+            return A_STOCK;
+        }
+
+        String upperSymbol = symbol.toUpperCase();
+
+        // 港股：5位数字或包含 .HK
+        if (upperSymbol.matches("\\d{5}") || upperSymbol.contains(".HK")) {
+            return HK_STOCK;
+        }
+
+        // 美股：纯字母或包含 .US
+        if (upperSymbol.matches("[A-Z]+(\\.US)?")) {
+            return US_STOCK;
+        }
+
+        // 场外基金：6位数字，以 00、11、15 等开头
+        if (symbol.matches("\\d{6}")) {
+            return FUND;
+        }
+
+        // 默认返回 A股/ETF
         return A_STOCK;
     }
 

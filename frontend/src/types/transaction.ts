@@ -5,7 +5,7 @@
 import type { TransactionType } from './common';
 
 export type Module = 'dividend' | 'fixed' | 'growth' | 'allweather';
-export type MarketType = 'a_stock' | 'etf' | 'fund' | 'hk_stock' | 'us_stock';
+export type TransactionMarketType = 'a_stock' | 'etf' | 'fund' | 'hk_stock' | 'us_stock';
 
 export interface Transaction {
   id: number;
@@ -13,7 +13,7 @@ export interface Transaction {
   symbol: string;
   name: string | null;
   module: Module | null;
-  market: MarketType | null;
+  market: TransactionMarketType | null;
   transactionType: TransactionType;
   shares: number;
   price: number;
@@ -30,7 +30,7 @@ export interface TransactionRequest {
   positionId?: number;
   symbol: string;
   module?: Module;
-  market?: MarketType;
+  market?: TransactionMarketType;
   transactionType: TransactionType;
   shares: number;
   price: number;

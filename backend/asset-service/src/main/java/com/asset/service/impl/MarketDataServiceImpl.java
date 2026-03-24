@@ -35,7 +35,30 @@ public class MarketDataServiceImpl implements MarketDataService {
 
     @Override
     public QuoteData getQuote(String symbol) {
-        MarketType marketType = MarketType.fromSymbol(symbol);
+        // 先尝试从持仓获取市场类型
+        Position position = positionRepository.selectOne(
+                new LambdaQueryWrapper<Position>()
+                        .eq(Position::getSymbol, symbol)
+                        .eq(Position::getDeleted, 0)
+                        .last("LIMIT 1")
+        );
+
+        MarketType marketType;
+        if (position != null && position.getMarket() != null) {
+            // 从持仓的market字段获取市场类型
+            marketType = MarketType.fromCode(position.getMarket());
+        } else {
+            // 持仓不存在时，从symbol推断
+            marketType = MarketType.fromSymbol(symbol);
+        }
+
+        return getQuoteByMarketType(symbol, marketType);
+    }
+
+    /**
+     * 根据指定的市场类型获取行情
+     */
+    private QuoteData getQuoteByMarketType(String symbol, MarketType marketType) {
         List<MarketDataProvider> supportedProviders = findProviders(marketType);
 
         if (supportedProviders.isEmpty()) {
@@ -76,58 +99,30 @@ public class MarketDataServiceImpl implements MarketDataService {
 
     @Override
     public List<QuoteData> getQuotes(List<String> symbols) {
-        // 按市场类型分组
+        // 按市场类型分组，优先从持仓获取market字段
         Map<MarketType, List<String>> groupedSymbols = new HashMap<>();
         for (String symbol : symbols) {
-            MarketType marketType = MarketType.fromSymbol(symbol);
+            MarketType marketType;
+            // 尝试从持仓获取市场类型
+            Position position = positionRepository.selectOne(
+                    new LambdaQueryWrapper<Position>()
+                            .eq(Position::getSymbol, symbol)
+                            .eq(Position::getDeleted, 0)
+                            .last("LIMIT 1")
+            );
+            if (position != null && position.getMarket() != null) {
+                marketType = MarketType.fromCode(position.getMarket());
+            } else {
+                marketType = MarketType.fromSymbol(symbol);
+            }
             groupedSymbols.computeIfAbsent(marketType, k -> new ArrayList<>()).add(symbol);
         }
 
         // 分别获取行情
         List<QuoteData> results = new ArrayList<>();
         for (Map.Entry<MarketType, List<String>> entry : groupedSymbols.entrySet()) {
-            List<MarketDataProvider> supportedProviders = findProviders(entry.getKey());
-            if (!supportedProviders.isEmpty()) {
-                // 尝试第一个提供者批量获取
-                MarketDataProvider provider = supportedProviders.get(0);
-                List<QuoteData> quotes = provider.getQuotes(entry.getValue());
-
-                // 检查失败的，用第二个提供者重试
-                if (supportedProviders.size() > 1) {
-                    List<String> failedSymbols = new ArrayList<>();
-                    for (QuoteData q : quotes) {
-                        if (!q.isSuccess()) {
-                            failedSymbols.add(q.getSymbol());
-                        }
-                    }
-                    if (!failedSymbols.isEmpty()) {
-                        MarketDataProvider fallbackProvider = supportedProviders.get(1);
-                        log.info("使用备选提供者 {} 重试 {} 个失败标的", fallbackProvider.getProviderName(), failedSymbols.size());
-                        List<QuoteData> retryQuotes = fallbackProvider.getQuotes(failedSymbols);
-                        // 合并结果
-                        for (int i = 0; i < quotes.size(); i++) {
-                            if (!quotes.get(i).isSuccess()) {
-                                for (QuoteData retry : retryQuotes) {
-                                    if (retry.getSymbol().equals(quotes.get(i).getSymbol()) && retry.isSuccess()) {
-                                        quotes.set(i, retry);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                results.addAll(quotes);
-            } else {
-                // 没有找到提供者，返回失败结果
-                for (String symbol : entry.getValue()) {
-                    results.add(QuoteData.builder()
-                            .symbol(symbol)
-                            .success(false)
-                            .errorMessage("不支持的市场类型")
-                            .build());
-                }
-            }
+            List<QuoteData> quotes = getQuotesByMarketType(entry.getValue(), entry.getKey());
+            results.addAll(quotes);
         }
 
         return results;
@@ -155,17 +150,17 @@ public class MarketDataServiceImpl implements MarketDataService {
             );
         }
 
-        // 获取所有标的代码
-        List<String> symbols = positions.stream()
-                .map(Position::getSymbol)
-                .distinct()
-                .toList();
-
-        // 批量获取行情
-        List<QuoteData> quotes = getQuotes(symbols);
-        Map<String, QuoteData> quoteMap = new HashMap<>();
-        for (QuoteData quote : quotes) {
-            quoteMap.put(quote.getSymbol(), quote);
+        // 按持仓的市场类型分组（使用持仓的market字段，而不是从symbol推断）
+        Map<MarketType, List<Position>> groupedPositions = new HashMap<>();
+        for (Position position : positions) {
+            MarketType marketType;
+            if (position.getMarket() != null) {
+                marketType = MarketType.fromCode(position.getMarket());
+            } else {
+                // 如果market字段为空，从symbol推断（兼容旧数据）
+                marketType = MarketType.fromSymbol(position.getSymbol());
+            }
+            groupedPositions.computeIfAbsent(marketType, k -> new ArrayList<>()).add(position);
         }
 
         // 更新持仓和保存历史
@@ -173,24 +168,42 @@ public class MarketDataServiceImpl implements MarketDataService {
         int failedCount = 0;
         List<String> failedSymbols = new ArrayList<>();
 
-        for (Position position : positions) {
-            QuoteData quote = quoteMap.get(position.getSymbol());
+        for (Map.Entry<MarketType, List<Position>> entry : groupedPositions.entrySet()) {
+            MarketType marketType = entry.getKey();
+            List<Position> positionList = entry.getValue();
 
-            if (quote != null && quote.isSuccess()) {
-                try {
-                    updatePositionWithQuote(position, quote);
-                    savePriceHistory(quote);
-                    successCount++;
-                } catch (Exception e) {
-                    log.error("更新持仓失败: symbol={}", position.getSymbol(), e);
+            // 获取该市场类型的行情
+            List<String> symbols = positionList.stream()
+                    .map(Position::getSymbol)
+                    .distinct()
+                    .toList();
+
+            List<QuoteData> quotes = getQuotesByMarketType(symbols, marketType);
+            Map<String, QuoteData> quoteMap = new HashMap<>();
+            for (QuoteData quote : quotes) {
+                quoteMap.put(quote.getSymbol(), quote);
+            }
+
+            // 更新每个持仓
+            for (Position position : positionList) {
+                QuoteData quote = quoteMap.get(position.getSymbol());
+
+                if (quote != null && quote.isSuccess()) {
+                    try {
+                        updatePositionWithQuote(position, quote);
+                        savePriceHistory(quote);
+                        successCount++;
+                    } catch (Exception e) {
+                        log.error("更新持仓失败: symbol={}", position.getSymbol(), e);
+                        failedCount++;
+                        failedSymbols.add(position.getSymbol());
+                    }
+                } else {
                     failedCount++;
-                    failedSymbols.add(position.getSymbol());
+                    String errorMsg = quote != null ? quote.getErrorMessage() : "未获取到行情数据";
+                    failedSymbols.add(position.getSymbol() + "(" + errorMsg + ")");
+                    log.warn("获取行情失败: symbol={}, error={}", position.getSymbol(), errorMsg);
                 }
-            } else {
-                failedCount++;
-                String errorMsg = quote != null ? quote.getErrorMessage() : "未获取到行情数据";
-                failedSymbols.add(position.getSymbol() + "(" + errorMsg + ")");
-                log.warn("获取行情失败: symbol={}, error={}", position.getSymbol(), errorMsg);
             }
         }
 
@@ -203,6 +216,57 @@ public class MarketDataServiceImpl implements MarketDataService {
                 "failedSymbols", failedSymbols,
                 "message", String.format("刷新完成，成功%d条，失败%d条", successCount, failedCount)
         );
+    }
+
+    /**
+     * 根据指定的市场类型批量获取行情
+     */
+    private List<QuoteData> getQuotesByMarketType(List<String> symbols, MarketType marketType) {
+        List<MarketDataProvider> supportedProviders = findProviders(marketType);
+        List<QuoteData> results = new ArrayList<>();
+
+        if (supportedProviders.isEmpty()) {
+            for (String symbol : symbols) {
+                results.add(QuoteData.builder()
+                        .symbol(symbol)
+                        .success(false)
+                        .errorMessage("不支持的市场类型")
+                        .build());
+            }
+            return results;
+        }
+
+        // 尝试第一个提供者批量获取
+        MarketDataProvider provider = supportedProviders.get(0);
+        List<QuoteData> quotes = provider.getQuotes(symbols);
+
+        // 检查失败的，用第二个提供者重试
+        if (supportedProviders.size() > 1) {
+            List<String> failedSymbols = new ArrayList<>();
+            for (QuoteData q : quotes) {
+                if (!q.isSuccess()) {
+                    failedSymbols.add(q.getSymbol());
+                }
+            }
+            if (!failedSymbols.isEmpty()) {
+                MarketDataProvider fallbackProvider = supportedProviders.get(1);
+                log.info("使用备选提供者 {} 重试 {} 个失败标的", fallbackProvider.getProviderName(), failedSymbols.size());
+                List<QuoteData> retryQuotes = fallbackProvider.getQuotes(failedSymbols);
+                // 合并结果
+                for (int i = 0; i < quotes.size(); i++) {
+                    if (!quotes.get(i).isSuccess()) {
+                        for (QuoteData retry : retryQuotes) {
+                            if (retry.getSymbol().equals(quotes.get(i).getSymbol()) && retry.isSuccess()) {
+                                quotes.set(i, retry);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return quotes;
     }
 
     @Override
@@ -251,14 +315,35 @@ public class MarketDataServiceImpl implements MarketDataService {
     }
 
     /**
-     * 根据标的代码获取市场类型
+     * 根据标的代码获取市场类型（优先从持仓获取）
      */
     private TradingCalendar.Market getMarketFromSymbol(String symbol) {
-        MarketType marketType = MarketType.fromSymbol(symbol);
+        // 尝试从持仓获取market字段
+        Position position = positionRepository.selectOne(
+                new LambdaQueryWrapper<Position>()
+                        .eq(Position::getSymbol, symbol)
+                        .eq(Position::getDeleted, 0)
+                        .last("LIMIT 1")
+        );
+
+        MarketType marketType;
+        if (position != null && position.getMarket() != null) {
+            marketType = MarketType.fromCode(position.getMarket());
+        } else {
+            marketType = MarketType.fromSymbol(symbol);
+        }
+
+        return convertToTradingCalendarMarket(marketType);
+    }
+
+    /**
+     * 将MarketType转换为TradingCalendar.Market
+     */
+    private TradingCalendar.Market convertToTradingCalendarMarket(MarketType marketType) {
         return switch (marketType) {
-            case SH, SZ, ETF -> TradingCalendar.Market.A_SHARE;
-            case HK -> TradingCalendar.Market.HK;
-            case US -> TradingCalendar.Market.US;
+            case A_STOCK, ETF -> TradingCalendar.Market.A_SHARE;
+            case HK_STOCK -> TradingCalendar.Market.HK;
+            case US_STOCK -> TradingCalendar.Market.US;
             case FUND -> TradingCalendar.Market.FUND;
         };
     }
@@ -271,8 +356,9 @@ public class MarketDataServiceImpl implements MarketDataService {
         // 定义优先级顺序
         List<String> priorityOrder = List.of(
                 "TencentStock",    // A股/ETF 首选腾讯
-                "EastMoney",       // A股/ETF 备选东方财富
-                "YahooFinance",    // 港股/美股
+                "EastMoney",       // A股/ETF/港股 备选东方财富
+                "AlphaVantage",    // 美股
+                "YahooFinance",    // 港股备选（已被东方财富替代）
                 "EastMoneyFund"    // 场外基金
         );
 

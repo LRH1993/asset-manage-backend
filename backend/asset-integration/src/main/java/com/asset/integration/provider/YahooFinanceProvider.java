@@ -40,10 +40,21 @@ public class YahooFinanceProvider implements MarketDataProvider {
             String url = config.getYahoo().getBaseUrl() + "/" + yahooSymbol +
                     "?interval=1d&range=2d";
 
+            // 构建完整的浏览器请求头，绕过反爬虫检测
             String response = webClientBuilder.build()
                     .get()
                     .uri(url)
-                    .header("User-Agent", "Mozilla/5.0")
+                    .header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7")
+                    .header("Accept-Encoding", "gzip, deflate, br")
+                    .header("Connection", "keep-alive")
+                    .header("Upgrade-Insecure-Requests", "1")
+                    .header("Sec-Fetch-Dest", "document")
+                    .header("Sec-Fetch-Mode", "navigate")
+                    .header("Sec-Fetch-Site", "none")
+                    .header("Sec-Fetch-User", "?1")
+                    .header("Cache-Control", "max-age=0")
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
@@ -78,7 +89,8 @@ public class YahooFinanceProvider implements MarketDataProvider {
 
     @Override
     public boolean supports(MarketType marketType) {
-        return marketType == MarketType.HK || marketType == MarketType.US;
+        // 只支持港股，美股使用 Alpha Vantage
+        return marketType == MarketType.HK_STOCK;
     }
 
     @Override

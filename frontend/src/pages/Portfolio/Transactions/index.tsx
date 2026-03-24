@@ -96,6 +96,10 @@ const Transactions: React.FC = () => {
   });
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [detailRecord, setDetailRecord] = useState<Transaction | null>(null);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   // 加载数据
   const fetchData = async () => {
@@ -186,18 +190,24 @@ const Transactions: React.FC = () => {
   };
 
   // 删除交易
-  const handleDelete = async (id: number) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: '确定要删除这条交易记录吗？',
-      okText: '确定',
-      cancelText: '取消',
-      onOk: async () => {
-        await deleteTransaction(id);
+  const handleDelete = (id: number) => {
+    setDeleteId(id);
+    setDeleteModalVisible(true);
+  };
+
+  // 确认删除
+  const confirmDelete = async () => {
+    if (deleteId) {
+      try {
+        await deleteTransaction(deleteId);
         message.success('删除成功');
+        setDeleteModalVisible(false);
+        setDeleteId(null);
         fetchData();
-      },
-    });
+      } catch (error: any) {
+        message.error(error.message || '删除失败');
+      }
+    }
   };
 
   // 导出交易数据
@@ -238,26 +248,8 @@ const Transactions: React.FC = () => {
 
   // 查看详情
   const handleDetail = (record: Transaction) => {
-    Modal.info({
-      title: '交易详情',
-      okText: '关闭',
-      content: (
-        <div style={{ marginTop: 16 }}>
-          <p><strong>交易日期：</strong>{record.transactionDate}</p>
-          <p><strong>交易类型：</strong>{record.transactionType === 'buy' ? '买入' : '卖出'}</p>
-          <p><strong>标的代码：</strong>{record.symbol}</p>
-          <p><strong>标的名称：</strong>{record.name || '-'}</p>
-          <p><strong>交易数量：</strong>{record.shares}</p>
-          <p><strong>成交价格：</strong>{record.price?.toFixed(2)}</p>
-          <p><strong>成交金额：</strong>{formatMoney(record.totalAmount)}</p>
-          <p><strong>手续费：</strong>{record.fee?.toFixed(2) || '0.00'}</p>
-          {record.transactionType === 'sell' && record.realizedProfit != null && (
-            <p><strong>已实现收益：</strong>{record.realizedProfit >= 0 ? '+' : ''}{formatMoney(record.realizedProfit)}</p>
-          )}
-          <p><strong>备注：</strong>{record.notes || '-'}</p>
-        </div>
-      ),
-    });
+    setDetailRecord(record);
+    setDetailModalVisible(true);
   };
 
   // 表格列定义
@@ -432,7 +424,10 @@ const Transactions: React.FC = () => {
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(24, 144, 255, 0.1)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-            onClick={() => handleDetail(record)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDetail(record);
+            }}
           >
             详情
           </button>
@@ -448,7 +443,10 @@ const Transactions: React.FC = () => {
             }}
             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 77, 79, 0.1)'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-            onClick={() => handleDelete(record.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(record.id);
+            }}
           >
             删除
           </button>
@@ -761,6 +759,111 @@ const Transactions: React.FC = () => {
             <Input.TextArea rows={2} placeholder="可选" />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 详情弹窗 */}
+      <Modal
+        title="交易详情"
+        open={detailModalVisible}
+        onCancel={() => setDetailModalVisible(false)}
+        footer={<Button onClick={() => setDetailModalVisible(false)}>关闭</Button>}
+        width={500}
+      >
+        {detailRecord && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>交易日期：</span>
+              <span style={{ fontWeight: 500 }}>{detailRecord.transactionDate}</span>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>交易类型：</span>
+              <span style={{
+                padding: '2px 8px',
+                borderRadius: 4,
+                background: detailRecord.transactionType === 'buy' ? 'rgba(232, 93, 93, 0.1)' : 'rgba(76, 175, 80, 0.1)',
+                color: detailRecord.transactionType === 'buy' ? PROFIT_COLORS.up : PROFIT_COLORS.down,
+              }}>
+                {detailRecord.transactionType === 'buy' ? '🔴 买入' : '🟢 卖出'}
+              </span>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>标的代码：</span>
+              <span style={{ fontFamily: 'SF Mono, Monaco, monospace' }}>{detailRecord.symbol}</span>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>标的名称：</span>
+              <span style={{ fontWeight: 500 }}>{detailRecord.name || '-'}</span>
+            </div>
+            {detailRecord.module && MODULE_CONFIG[detailRecord.module] && (
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>所属模块：</span>
+                <span style={{
+                  padding: '2px 8px',
+                  borderRadius: 4,
+                  background: MODULE_CONFIG[detailRecord.module].bgColor,
+                  color: MODULE_CONFIG[detailRecord.module].color,
+                  border: `1px solid ${MODULE_CONFIG[detailRecord.module].borderColor}`,
+                }}>
+                  {MODULE_CONFIG[detailRecord.module].emoji} {MODULE_CONFIG[detailRecord.module].name}
+                </span>
+              </div>
+            )}
+            {detailRecord.market && MARKET_TYPE_CONFIG[detailRecord.market] && (
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>市场类型：</span>
+                <span>{MARKET_TYPE_CONFIG[detailRecord.market].emoji} {MARKET_TYPE_CONFIG[detailRecord.market].name}</span>
+              </div>
+            )}
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>交易数量：</span>
+              <span style={{ fontFamily: 'SF Mono, Monaco, monospace' }}>{formatShares(detailRecord.shares)}</span>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>成交价格：</span>
+              <span style={{ fontFamily: 'SF Mono, Monaco, monospace' }}>{detailRecord.price?.toFixed(2)}</span>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>成交金额：</span>
+              <span style={{ fontFamily: 'SF Mono, Monaco, monospace', color: detailRecord.transactionType === 'buy' ? PROFIT_COLORS.down : PROFIT_COLORS.up }}>
+                {detailRecord.transactionType === 'buy' ? '-' : '+'}{formatMoney(detailRecord.totalAmount)}
+              </span>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>手续费：</span>
+              <span style={{ fontFamily: 'SF Mono, Monaco, monospace' }}>{detailRecord.fee?.toFixed(2) || '0.00'}</span>
+            </div>
+            {detailRecord.transactionType === 'sell' && detailRecord.realizedProfit != null && (
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>已实现收益：</span>
+                <span style={{ color: getProfitColor(detailRecord.realizedProfit), fontFamily: 'SF Mono, Monaco, monospace' }}>
+                  {detailRecord.realizedProfit >= 0 ? '+' : ''}{formatMoney(detailRecord.realizedProfit)}
+                </span>
+              </div>
+            )}
+            {detailRecord.notes && (
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ color: '#8C8C8C', display: 'inline-block', width: 80 }}>备注：</span>
+                <span>{detailRecord.notes}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* 删除确认弹窗 */}
+      <Modal
+        title="确认删除"
+        open={deleteModalVisible}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setDeleteId(null);
+        }}
+        onOk={confirmDelete}
+        okText="确定"
+        cancelText="取消"
+        okButtonProps={{ danger: true }}
+      >
+        <p>确定要删除这条交易记录吗？</p>
       </Modal>
     </div>
   );

@@ -172,12 +172,6 @@ const Positions: React.FC = () => {
     message.info('导入功能开发中，敬请期待');
   };
 
-  // 快捷交易（买入/卖出）
-  const handleQuickTrade = (record: Position, type: 'buy' | 'sell') => {
-    message.info(`跳转到交易记录页面，自动填充${type === 'buy' ? '买入' : '卖出'}信息`);
-    // 可以跳转到交易记录页面并自动填充
-  };
-
   // 处理表格变化（分页）
   const handleTableChange = (pagination: any) => {
     const newParams = {
@@ -405,38 +399,6 @@ const Positions: React.FC = () => {
       align: 'center',
       render: (_, record) => (
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-          <button
-            style={{
-              padding: '4px 8px',
-              fontSize: 12,
-              borderRadius: 4,
-              border: 'none',
-              background: 'transparent',
-              color: PROFIT_COLORS.up,
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(232, 93, 93, 0.1)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-            onClick={() => handleQuickTrade(record, 'buy')}
-          >
-            买入
-          </button>
-          <button
-            style={{
-              padding: '4px 8px',
-              fontSize: 12,
-              borderRadius: 4,
-              border: 'none',
-              background: 'transparent',
-              color: PROFIT_COLORS.down,
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(76, 175, 80, 0.1)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-            onClick={() => handleQuickTrade(record, 'sell')}
-          >
-            卖出
-          </button>
           <button
             style={{
               padding: '4px 8px',

@@ -28,6 +28,11 @@ public class MarketDataConfig {
     private FundConfig fund = new FundConfig();
 
     /**
+     * Alpha Vantage配置（美股数据源）
+     */
+    private AlphaVantageConfig alphaVantage = new AlphaVantageConfig();
+
+    /**
      * 请求超时时间（毫秒）
      */
     private int timeout = 10000;
@@ -84,5 +89,23 @@ public class MarketDataConfig {
          * 基金详情接口
          */
         private String detailUrl = "https://fund.eastmoney.com/pingzhongdata";
+    }
+
+    @Data
+    public static class AlphaVantageConfig {
+        /**
+         * Alpha Vantage API 基础URL
+         */
+        private String baseUrl = "https://www.alphavantage.co/query";
+
+        /**
+         * API Key
+         */
+        private String apiKey = "RZ902SQZWIJ9PG79";
+
+        /**
+         * 请求间隔（毫秒），Alpha Vantage 免费版限制每分钟5次
+         */
+        private long requestInterval = 12000;
     }
 }

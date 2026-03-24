@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * 东方财富数据提供者
- * 用于获取A股和场内ETF的行情数据
+ * 用于获取A股、场内ETF和港股的行情数据
  */
 @Slf4j
 @Component
@@ -58,7 +58,7 @@ public class EastMoneyProvider implements MarketDataProvider {
 
             return parseQuoteResponse(symbol, response);
         } catch (Exception e) {
-            log.error("获取A股行情失败: symbol={}", symbol, e);
+            log.error("获取行情失败: symbol={}", symbol, e);
             return QuoteData.builder()
                     .symbol(symbol)
                     .success(false)
@@ -87,9 +87,9 @@ public class EastMoneyProvider implements MarketDataProvider {
 
     @Override
     public boolean supports(MarketType marketType) {
-        return marketType == MarketType.SH ||
-               marketType == MarketType.SZ ||
-               marketType == MarketType.ETF;
+        return marketType == MarketType.A_STOCK ||
+               marketType == MarketType.ETF ||
+               marketType == MarketType.HK_STOCK;  // 添加港股支持
     }
 
     @Override
@@ -100,8 +100,17 @@ public class EastMoneyProvider implements MarketDataProvider {
     /**
      * 构建东方财富的 secid
      * 格式：市场ID.股票代码
+     * A股沪市: 1.xxxxxx
+     * A股深市: 0.xxxxxx
+     * 港股: 116.xxxxx
      */
     private String buildSecId(String symbol) {
+        // 港股格式: 00700.HK 或 纯5位数字
+        if (symbol.contains(".HK") || symbol.matches("\\d{5}")) {
+            String pureCode = symbol.replace(".HK", "");
+            return "116." + pureCode;  // 港股市场ID是116
+        }
+
         String pureCode = symbol.split("\\.")[0];
 
         // 判断市场
